@@ -16,15 +16,21 @@ export const metadata: Metadata = {
 };
 
 export default async function FlashSalePage() {
-  const products = await prisma.product.findMany({
-    include: {
-      units: {
-        where: { status: "AVAILABLE" },
-        orderBy: { pricePaise: "asc" },
+  let products: any[] = [];
+  try {
+    products = await prisma.product.findMany({
+      include: {
+        units: {
+          where: { status: "AVAILABLE" },
+          orderBy: { pricePaise: "asc" },
+        },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (err) {
+    console.warn("Flash sale product fetch error during build:", err);
+    products = [];
+  }
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans">
