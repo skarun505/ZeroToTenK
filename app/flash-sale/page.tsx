@@ -19,32 +19,35 @@ export const metadata: Metadata = {
 export default async function FlashSalePage() {
   let products: any[] = [];
   try {
-    products = await prisma.product.findMany({
-      include: {
-        units: {
-          where: { status: "AVAILABLE" },
-          orderBy: { pricePaise: "asc" },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-  } catch (err) {
-    console.warn("Prisma flash sale fetch failed, falling back to Supabase:", err);
+    const { data } = await supabase
+      .from("Product")
+      .select("*, units:Unit(*)")
+      .order("createdAt", { ascending: false });
+    if (data && data.length > 0) {
+      products = data.map((p: any) => ({
+        ...p,
+        units: (p.units || [])
+          .filter((u: any) => u.status === "AVAILABLE")
+          .sort((a: any, b: any) => (a.pricePaise || 0) - (b.pricePaise || 0)),
+      }));
+    }
+  } catch (supabaseErr) {
+    console.warn("Supabase flash sale fetch error, trying Prisma:", supabaseErr);
+  }
+
+  if (products.length === 0) {
     try {
-      const { data } = await supabase
-        .from("Product")
-        .select("*, units:Unit(*)")
-        .order("createdAt", { ascending: false });
-      if (data) {
-        products = data.map((p: any) => ({
-          ...p,
-          units: (p.units || [])
-            .filter((u: any) => u.status === "AVAILABLE")
-            .sort((a: any, b: any) => (a.pricePaise || 0) - (b.pricePaise || 0)),
-        }));
-      }
-    } catch (fallbackErr) {
-      console.error("Supabase flash sale fallback error:", fallbackErr);
+      products = await prisma.product.findMany({
+        include: {
+          units: {
+            where: { status: "AVAILABLE" },
+            orderBy: { pricePaise: "asc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (err) {
+      console.warn("Prisma flash sale fetch failed:", err);
     }
   }
 

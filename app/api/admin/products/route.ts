@@ -21,6 +21,35 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   try {
+    const { data, error } = await supabase
+      .from("Product")
+      .select("*, units:Unit(*), reviews:Review(*)")
+      .order("createdAt", { ascending: false });
+
+    if (data && data.length > 0) {
+      const formatted = data.map((p: any) => ({
+        ...p,
+        _count: {
+          units: p.units?.length || 0,
+          reviews: p.reviews?.length || 0,
+        },
+      }));
+
+      formatted.sort((a: any, b: any) => {
+        const aHas = hasRealImage(a);
+        const bHas = hasRealImage(b);
+        if (aHas && !bHas) return -1;
+        if (!aHas && bHas) return 1;
+        return 0;
+      });
+
+      return NextResponse.json({ ok: true, products: formatted });
+    }
+  } catch (err: any) {
+    console.warn("Supabase fetch error, trying Prisma:", err?.message);
+  }
+
+  try {
     const products = await prisma.product.findMany({
       include: {
         units: true,
@@ -34,7 +63,6 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    // Ensure all imaged products are listed at the top
     products.sort((a, b) => {
       const aHas = hasRealImage(a);
       const bHas = hasRealImage(b);
@@ -45,26 +73,6 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, products });
   } catch (err: any) {
-    console.warn("Prisma fetch failed, falling back to Supabase REST client:", err?.message);
-    try {
-      const { data, error } = await supabase
-        .from("Product")
-        .select("*, units:Unit(*), reviews:Review(*)")
-        .order("createdAt", { ascending: false });
-
-      if (data && data.length > 0) {
-        const formatted = data.map((p: any) => ({
-          ...p,
-          _count: {
-            units: p.units?.length || 0,
-            reviews: p.reviews?.length || 0,
-          },
-        }));
-        return NextResponse.json({ ok: true, products: formatted });
-      }
-    } catch (fallbackErr) {
-      console.error("Supabase fallback fetch error:", fallbackErr);
-    }
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

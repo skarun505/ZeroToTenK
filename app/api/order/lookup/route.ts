@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+import { supabase } from "@/lib/supabase";
+
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
@@ -15,44 +17,49 @@ export async function GET(req: Request) {
       );
     }
 
-    // Extract raw digits if looking for phone number
-    const digitsOnly = q.replace(/\D/g, "");
-    const last10Digits = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
+    let orders: any[] = [];
+    try {
+      const { data } = await supabase
+        .from("Order")
+        .select("*, unit:Unit(*, product:Product(*))")
+        .order("createdAt", { ascending: false })
+        .limit(20);
+      if (data) {
+        orders = data.filter((o: any) => {
+          if (o.id && o.id.toLowerCase().includes(q.toLowerCase())) return true;
+          if (o.utr && o.utr.includes(q)) return true;
+          if (o.shippingJson && o.shippingJson.includes(q)) return true;
+          return false;
+        });
+      }
+    } catch {}
 
-    // Search conditions
-    const orConditions: any[] = [
-      { id: { equals: q } },
-      { id: { contains: q, mode: "insensitive" } },
-    ];
+    if (orders.length === 0) {
+      try {
+        // Extract raw digits if looking for phone number
+        const digitsOnly = q.replace(/\D/g, "");
+        const last10Digits = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
 
-    if (last10Digits.length >= 6) {
-      orConditions.push({
-        shippingJson: { contains: last10Digits },
-      });
+        const orConditions: any[] = [
+          { id: { equals: q } },
+          { id: { contains: q, mode: "insensitive" } },
+        ];
+
+        if (last10Digits.length >= 6) {
+          orConditions.push({ shippingJson: { contains: last10Digits } });
+        }
+        if (q.length >= 6) {
+          orConditions.push({ utr: { equals: q, mode: "insensitive" } });
+        }
+
+        orders = await prisma.order.findMany({
+          where: { OR: orConditions },
+          include: { unit: { include: { product: true } } },
+          orderBy: { createdAt: "desc" },
+          take: 20,
+        });
+      } catch {}
     }
-
-    if (q.length >= 6) {
-      orConditions.push({
-        utr: { equals: q, mode: "insensitive" },
-      });
-    }
-
-    const orders = await prisma.order.findMany({
-      where: {
-        OR: orConditions,
-      },
-      include: {
-        unit: {
-          include: {
-            product: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 20,
-    });
 
     // Sanitize results
     const results = orders.map((order) => {

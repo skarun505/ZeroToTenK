@@ -34,30 +34,30 @@ export const dynamic = "force-dynamic";
 export default async function OrderPage({ params, searchParams }: OrderPageProps) {
   let order: any = null;
   try {
-    order = await prisma.order.findUnique({
-      where: { id: params.id },
-      include: {
-        unit: {
-          include: {
-            product: true,
-          },
-        },
-      },
-    });
+    const { data } = await supabase
+      .from("Order")
+      .select("*, unit:Unit(*, product:Product(*))")
+      .eq("id", params.id)
+      .maybeSingle();
+    if (data) order = data;
   } catch (err) {
-    console.warn("Prisma order fetch failed, falling back to Supabase:", err);
+    console.warn("Supabase order fetch error:", err);
   }
 
   if (!order) {
     try {
-      const { data } = await supabase
-        .from("Order")
-        .select("*, unit:Unit(*, product:Product(*))")
-        .eq("id", params.id)
-        .maybeSingle();
-      order = data;
-    } catch (fallbackErr) {
-      console.error("Supabase order fallback error:", fallbackErr);
+      order = await prisma.order.findUnique({
+        where: { id: params.id },
+        include: {
+          unit: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+    } catch (prismaErr) {
+      console.warn("Prisma order fetch failed:", prismaErr);
     }
   }
 

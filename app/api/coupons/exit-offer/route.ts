@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { applyExitOffer } from "@/lib/pricing";
 
 export async function POST(req: Request) {
@@ -10,17 +11,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "unitId and code are required" }, { status: 400 });
     }
 
-    const coupon = await prisma.coupon.findUnique({
-      where: { code: code.toUpperCase() },
-    });
+    const normCode = code.toUpperCase();
+    let coupon: any = null;
+    try {
+      const { data } = await supabase.from("Coupon").select("*").eq("code", normCode).maybeSingle();
+      coupon = data;
+    } catch {}
+
+    if (!coupon) {
+      try {
+        coupon = await prisma.coupon.findUnique({ where: { code: normCode } });
+      } catch {}
+    }
 
     if (!coupon || !coupon.active || coupon.used >= coupon.maxUses) {
       return NextResponse.json({ ok: false, error: "Invalid or expired promo code" }, { status: 400 });
     }
 
-    const unit = await prisma.unit.findUnique({
-      where: { id: unitId },
-    });
+    let unit: any = null;
+    try {
+      const { data } = await supabase.from("Unit").select("*").eq("id", unitId).maybeSingle();
+      unit = data;
+    } catch {}
+
+    if (!unit) {
+      try {
+        unit = await prisma.unit.findUnique({ where: { id: unitId } });
+      } catch {}
+    }
 
     if (!unit) {
       return NextResponse.json({ ok: false, error: "Unit not found" }, { status: 404 });

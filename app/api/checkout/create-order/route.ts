@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { reserveUnit, releaseExpiredReservations } from "@/lib/inventory";
+import { supabase } from "@/lib/supabase";
 import { applyExitOffer } from "@/lib/pricing";
 import { buildUpiLink, buildSpecificUpiLinks, generateUpiQrCode } from "@/lib/upi";
 import Razorpay from "razorpay";
@@ -34,10 +34,29 @@ export async function POST(req: Request) {
 
     const { unitId, userId, shipping, couponCode } = parsed.data;
 
-    const unit = await prisma.unit.findUnique({
-      where: { id: unitId },
-      include: { product: true },
-    });
+    // 1. Fetch target unit and product (Supabase REST primary)
+    let unit: any = null;
+    try {
+      const { data } = await supabase
+        .from("Unit")
+        .select("*, product:Product(*)")
+        .eq("id", unitId)
+        .maybeSingle();
+      if (data) unit = data;
+    } catch (e) {
+      console.warn("Supabase unit fetch error:", e);
+    }
+
+    if (!unit) {
+      try {
+        unit = await prisma.unit.findUnique({
+          where: { id: unitId },
+          include: { product: true },
+        });
+      } catch (err: any) {
+        console.warn("Prisma unit fetch error:", err?.message);
+      }
+    }
 
     if (!unit) {
       return NextResponse.json({ error: "Product unit not found" }, { status: 404 });
@@ -45,32 +64,41 @@ export async function POST(req: Request) {
 
     if (unit.status === "SOLD") {
       return NextResponse.json(
-        { error: "This unique item has already been purchased. Please select another unit." },
+        { error: "This digital license has already been purchased. Please select another unit." },
         { status: 410 }
       );
     }
 
     const isManualMode = (process.env.PAYMENT_MODE || "manual").toLowerCase() === "manual";
     const reservationMinutes = isManualMode ? 30 : 10;
+    const until = new Date(Date.now() + reservationMinutes * 60_000);
 
-    // 1. Release expired reservations and reserve unit atomically
-    await releaseExpiredReservations().catch(() => {});
-    const reserved = await reserveUnit(unitId, reservationMinutes);
-    if (!reserved) {
-      return NextResponse.json(
-        { error: "Unit is currently in another checkout session or just sold. Try another unit." },
-        { status: 409 }
-      );
-    }
+    // 2. Reserve unit
+    try {
+      await supabase
+        .from("Unit")
+        .update({ status: "RESERVED", reservedUntil: until.toISOString() })
+        .eq("id", unitId);
+    } catch {}
 
-    // 2. Pricing and coupon calculation
+    // 3. Pricing and coupon calculation
     let amount = unit.pricePaise;
     let discount = 0;
 
     if (couponCode === "EXIT5") {
-      const coupon = await prisma.coupon.findUnique({ where: { code: "EXIT5" } });
+      let coupon: any = null;
+      try {
+        const { data } = await supabase.from("Coupon").select("*").eq("code", "EXIT5").maybeSingle();
+        coupon = data;
+      } catch {}
+
+      if (!coupon) {
+        try {
+          coupon = await prisma.coupon.findUnique({ where: { code: "EXIT5" } });
+        } catch {}
+      }
+
       if (coupon && coupon.active && coupon.used < coupon.maxUses) {
-        // Enforce margin floor check (Section 5.1 & 7)
         const offerResult = applyExitOffer(unit.pricePaise, unit.floorPaise, coupon.percentOff);
         if (offerResult.ok) {
           discount = offerResult.savingsPaise;
@@ -79,40 +107,92 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Create or update order record
-    // If an existing pending order exists for this unit, we reuse/update it
-    let order = await prisma.order.findUnique({
-      where: { unitId },
-    });
+    // 4. Create or update order record
+    let order: any = null;
+    try {
+      const { data: existingOrd } = await supabase
+        .from("Order")
+        .select("*")
+        .eq("unitId", unitId)
+        .maybeSingle();
 
-    if (order && (order.status === "AWAITING_PAYMENT" || order.status === "PENDING")) {
-      order = await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          userId,
-          amountPaise: amount,
-          discountPaise: discount,
-          couponCode: discount > 0 ? couponCode : null,
-          shippingJson: JSON.stringify(shipping),
-          paymentMode: isManualMode ? "MANUAL_UPI" : "RAZORPAY",
-        },
-      });
-    } else {
-      order = await prisma.order.create({
-        data: {
-          userId,
-          unitId,
-          amountPaise: amount,
-          discountPaise: discount,
-          couponCode: discount > 0 ? couponCode : null,
-          shippingJson: JSON.stringify(shipping),
-          paymentMode: isManualMode ? "MANUAL_UPI" : "RAZORPAY",
-          status: isManualMode ? "AWAITING_PAYMENT" : "PENDING",
-        },
-      });
+      if (existingOrd && (existingOrd.status === "AWAITING_PAYMENT" || existingOrd.status === "PENDING")) {
+        const { data: updatedOrd } = await supabase
+          .from("Order")
+          .update({
+            userId,
+            amountPaise: amount,
+            discountPaise: discount,
+            couponCode: discount > 0 ? couponCode : null,
+            shippingJson: JSON.stringify(shipping),
+            paymentMode: isManualMode ? "MANUAL_UPI" : "RAZORPAY",
+          })
+          .eq("id", existingOrd.id)
+          .select()
+          .maybeSingle();
+        order = updatedOrd || existingOrd;
+      } else {
+        const newOrderId = `ord_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        const { data: newOrd } = await supabase
+          .from("Order")
+          .insert({
+            id: newOrderId,
+            userId,
+            unitId,
+            amountPaise: amount,
+            discountPaise: discount,
+            couponCode: discount > 0 ? couponCode : null,
+            shippingJson: JSON.stringify(shipping),
+            paymentMode: isManualMode ? "MANUAL_UPI" : "RAZORPAY",
+            status: isManualMode ? "AWAITING_PAYMENT" : "PENDING",
+          })
+          .select()
+          .maybeSingle();
+        order = newOrd || { id: newOrderId };
+      }
+    } catch (e) {
+      console.warn("Supabase order creation fallback:", e);
     }
 
-    // 4. Branch based on Payment Mode (Section 6 vs Section 6B)
+    if (!order) {
+      try {
+        const existingOrder = await prisma.order.findUnique({ where: { unitId } });
+        if (existingOrder && (existingOrder.status === "AWAITING_PAYMENT" || existingOrder.status === "PENDING")) {
+          order = await prisma.order.update({
+            where: { id: existingOrder.id },
+            data: {
+              userId,
+              amountPaise: amount,
+              discountPaise: discount,
+              couponCode: discount > 0 ? couponCode : null,
+              shippingJson: JSON.stringify(shipping),
+              paymentMode: isManualMode ? "MANUAL_UPI" : "RAZORPAY",
+            },
+          });
+        } else {
+          order = await prisma.order.create({
+            data: {
+              userId,
+              unitId,
+              amountPaise: amount,
+              discountPaise: discount,
+              couponCode: discount > 0 ? couponCode : null,
+              shippingJson: JSON.stringify(shipping),
+              paymentMode: isManualMode ? "MANUAL_UPI" : "RAZORPAY",
+              status: isManualMode ? "AWAITING_PAYMENT" : "PENDING",
+            },
+          });
+        }
+      } catch (prismaErr: any) {
+        console.error("Prisma order creation failed:", prismaErr);
+      }
+    }
+
+    if (!order) {
+      return NextResponse.json({ error: "Failed to record checkout order" }, { status: 500 });
+    }
+
+    // 5. Branch based on Payment Mode
     if (isManualMode) {
       const vpa = process.env.MERCHANT_VPA || "6380640087@upi";
       const payeeName = process.env.MERCHANT_NAME || "ZeroToTenK Digital";

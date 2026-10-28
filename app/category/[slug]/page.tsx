@@ -55,36 +55,39 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   let products: any[] = [];
   try {
-    products = await prisma.product.findMany({
-      where: {
-        category: params.slug,
-      },
-      include: {
-        units: {
-          where: { status: "AVAILABLE" },
-          orderBy: { pricePaise: "asc" },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-  } catch (err) {
-    console.error("Prisma category load failed, falling back to Supabase:", err);
+    const { data } = await supabase
+      .from("Product")
+      .select("*, units:Unit(*)")
+      .eq("category", params.slug)
+      .order("createdAt", { ascending: false });
+    if (data && data.length > 0) {
+      products = data.map((p: any) => ({
+        ...p,
+        units: (p.units || [])
+          .filter((u: any) => u.status === "AVAILABLE")
+          .sort((a: any, b: any) => (a.pricePaise || 0) - (b.pricePaise || 0)),
+      }));
+    }
+  } catch (supabaseErr) {
+    console.warn("Supabase category fetch error, trying Prisma:", supabaseErr);
+  }
+
+  if (products.length === 0) {
     try {
-      const { data } = await supabase
-        .from("Product")
-        .select("*, units:Unit(*)")
-        .eq("category", params.slug)
-        .order("createdAt", { ascending: false });
-      if (data) {
-        products = data.map((p: any) => ({
-          ...p,
-          units: (p.units || [])
-            .filter((u: any) => u.status === "AVAILABLE")
-            .sort((a: any, b: any) => (a.pricePaise || 0) - (b.pricePaise || 0)),
-        }));
-      }
-    } catch (fallbackErr) {
-      console.error("Supabase category fallback error:", fallbackErr);
+      products = await prisma.product.findMany({
+        where: {
+          category: params.slug,
+        },
+        include: {
+          units: {
+            where: { status: "AVAILABLE" },
+            orderBy: { pricePaise: "asc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (err) {
+      console.error("Prisma category load failed:", err);
     }
   }
 

@@ -19,21 +19,21 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
   // Fallback if accessed directly: grab first available unit
   if (!targetUnitId) {
     try {
-      const fallback = await prisma.unit.findFirst({
-        where: { status: "AVAILABLE" },
-      });
-      if (fallback) {
-        targetUnitId = fallback.id;
-      }
-    } catch {
+      const { data } = await supabase
+        .from("Unit")
+        .select("id")
+        .eq("status", "AVAILABLE")
+        .limit(1)
+        .maybeSingle();
+      if (data) targetUnitId = data.id;
+    } catch {}
+
+    if (!targetUnitId) {
       try {
-        const { data } = await supabase
-          .from("Unit")
-          .select("id")
-          .eq("status", "AVAILABLE")
-          .limit(1)
-          .maybeSingle();
-        if (data) targetUnitId = data.id;
+        const fallback = await prisma.unit.findFirst({
+          where: { status: "AVAILABLE" },
+        });
+        if (fallback) targetUnitId = fallback.id;
       } catch {}
     }
   }
@@ -44,26 +44,24 @@ export default async function CheckoutPage({ searchParams }: CheckoutPageProps) 
 
   let unit: any = null;
   try {
-    unit = await prisma.unit.findUnique({
-      where: { id: targetUnitId },
-      include: {
-        product: true,
-      },
-    });
+    const { data } = await supabase
+      .from("Unit")
+      .select("*, product:Product(*)")
+      .eq("id", targetUnitId)
+      .maybeSingle();
+    if (data) unit = data;
   } catch (err) {
-    console.warn("Prisma checkout fetch failed, falling back to Supabase:", err);
+    console.warn("Supabase checkout fetch error:", err);
   }
 
   if (!unit) {
     try {
-      const { data } = await supabase
-        .from("Unit")
-        .select("*, product:Product(*)")
-        .eq("id", targetUnitId)
-        .maybeSingle();
-      unit = data;
-    } catch (fallbackErr) {
-      console.error("Supabase checkout fallback error:", fallbackErr);
+      unit = await prisma.unit.findUnique({
+        where: { id: targetUnitId },
+        include: { product: true },
+      });
+    } catch (err) {
+      console.warn("Prisma checkout fetch failed:", err);
     }
   }
 
