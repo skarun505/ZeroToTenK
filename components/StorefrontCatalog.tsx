@@ -68,7 +68,7 @@ export function StorefrontCatalog({ initialProducts }: StorefrontCatalogProps) {
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
               selectedFilter === f.id
                 ? "btn-emerald text-white shadow-md scale-105"
-                : "bg-slate-900 border border-slate-800 text-slate-300 hover:border-emerald-500/50 hover:bg-slate-800 font-semibold shadow-xs"
+                : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold shadow-xs"
             }`}
           >
             {f.label}
@@ -77,18 +77,18 @@ export function StorefrontCatalog({ initialProducts }: StorefrontCatalogProps) {
       </div>
 
       {/* Bar: Results count & Sort */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3 text-xs text-slate-400">
-        <div className="font-extrabold text-slate-200 flex items-center gap-1.5">
-          <BookOpen className="w-4 h-4 text-emerald-400" />
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 text-xs text-slate-600 dark:text-slate-400">
+        <div className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+          <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <span>Showing {filteredProducts.length} Premium Digital Playbooks</span>
         </div>
 
         <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-3.5 h-3.5 text-emerald-400" />
+          <ArrowUpDown className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-200 font-bold text-xs rounded-lg px-3 py-1.5 shadow-xs focus:outline-none focus:border-emerald-500"
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-lg px-3 py-1.5 shadow-xs focus:outline-none focus:border-emerald-500"
           >
             <option value="featured">Featured Best Sellers</option>
             <option value="price-asc">Price: Low to High</option>

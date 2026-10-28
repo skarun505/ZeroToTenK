@@ -38,47 +38,47 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <Navbar />
       <MobileSearchBar />
       <MobileCategoryTray />
 
       {/* Hero Section - Sleek High-Converting Digital Publishing Aesthetic */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900/60 to-[#090d16] border-b border-slate-800 py-10 sm:py-20">
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-slate-100/80 dark:from-slate-950 dark:via-slate-900/60 dark:to-[#090d16] border-b border-slate-200 dark:border-slate-800 py-10 sm:py-20 transition-colors">
         {/* Background Ambient Glows */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-1/2 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto space-y-4 sm:space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-950/80 border border-emerald-600/40 text-emerald-400 shadow-sm">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-600/40 text-emerald-700 dark:text-emerald-400 shadow-xs">
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>THE ZERO TO ₹10,000/DAY DIGITAL BLUEPRINT</span>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
               Turn Your Knowledge Into A <br className="hidden sm:inline" />
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-500 dark:from-emerald-400 dark:via-teal-300 dark:to-amber-300 bg-clip-text text-transparent">
                 ₹10K/Day eBook Business
               </span>
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
               Practical, field-tested playbooks, copywriting swipe files, and automated UPI funnels that show ordinary creators and freelancers how to sell high-demand digital guides predictably.
             </p>
 
             {/* Feature Highlights Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 pt-2 text-xs font-bold text-slate-200">
-              <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 pt-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+              <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
                 Instant PDF + ePub Downloads
               </span>
-              <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xs">
-                <ShieldCheck className="w-4 h-4 text-teal-400" />
+              <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <ShieldCheck className="w-4 h-4 text-teal-500 dark:text-teal-400" />
                 Actionable Notion Workbooks
               </span>
-              <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 shadow-xs">
-                <Zap className="w-4 h-4 text-amber-400" />
+              <span className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <Zap className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                 Zero Coding &bull; Direct UPI
               </span>
             </div>

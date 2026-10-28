@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { supabase } from "@/lib/supabase";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   CreditCard,
   Package,
@@ -103,18 +104,18 @@ export default async function AdminDashboardPage() {
       )}
 
       {/* Top Header & Fast Navigation Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-6 transition-colors">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
               Live Production Analytics
             </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
               Edge Synced
             </span>
           </div>
           <div className="flex items-center gap-3 mt-2">
-            <div className="bg-slate-900 p-1.5 rounded-xl border border-slate-800 shadow-md inline-block">
+            <div className="bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md inline-block">
               <img
                 src="/logo.svg"
                 alt="ZeroToTenK"
@@ -122,10 +123,10 @@ export default async function AdminDashboardPage() {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 Executive Sales &amp; Growth Matrix
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                 Real-time revenue curves, AOV velocity, best-selling digital blueprints, and fulfillment stream.
               </p>
             </div>
@@ -134,11 +135,14 @@ export default async function AdminDashboardPage() {
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* Light / Dark Mode Toggle */}
+          <ThemeToggle variant="nav" />
+
           <Link
             href="/admin/products"
-            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700/80 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
+            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
           >
-            <Layers className="w-4 h-4 text-indigo-400" />
+            <Layers className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
             <span>Product Catalog</span>
           </Link>
           <Link
