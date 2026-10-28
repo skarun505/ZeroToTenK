@@ -34,6 +34,7 @@ interface UnitWithProduct {
   repairNotes?: string | null;
   product: {
     id: string;
+    slug?: string;
     title: string;
     brand: string;
     modelNumber: string;
@@ -374,7 +375,7 @@ export function CheckoutFlow({ unit, initialCoupon }: CheckoutFlowProps) {
           <div className="flex items-center gap-3 min-w-0 pr-2">
             <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-800 shrink-0 flex items-center justify-center">
               <img
-                src={images[0] || ""}
+                src={images[0] || (unit.product.slug ? `/images/books/${unit.product.slug}.svg` : "/logo.svg")}
                 alt={unit.product.title}
                 className="max-h-full max-w-full object-contain"
               />
@@ -867,7 +868,7 @@ export function CheckoutFlow({ unit, initialCoupon }: CheckoutFlowProps) {
             <div className="flex gap-4">
               <div className="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-950 p-2 shrink-0 border border-slate-200 dark:border-slate-800 flex items-center justify-center">
                 <img
-                  src={images[0] || ""}
+                  src={images[0] || (unit.product.slug ? `/images/books/${unit.product.slug}.svg` : "/logo.svg")}
                   alt={unit.product.title}
                   className="max-h-full max-w-full object-contain"
                 />

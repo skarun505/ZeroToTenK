@@ -328,7 +328,7 @@ export function ProductManagerClient({ initialProducts }: ProductManagerClientPr
                 } catch {
                   imgList = [];
                 }
-                const firstImg = imgList[0] || "/placeholder.png";
+                const firstImg = imgList[0] || `/images/books/${p.slug}.svg` || "/placeholder.png";
                 const inStockCount = p.units.filter((u) => u.status === "AVAILABLE").length;
                 const minPrice =
                   p.units.length > 0
