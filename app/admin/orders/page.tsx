@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { formatINR, maskSerialOrImei } from "@/lib/utils";
 import { ArrowLeft, ShoppingBag, ExternalLink } from "lucide-react";
 
@@ -16,20 +17,32 @@ export default async function AdminOrdersPage() {
 
   let orders: any[] = [];
   try {
-    orders = await prisma.order.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        unit: {
-          include: {
-            product: true,
+    const { data } = await supabase
+      .from("Order")
+      .select("*, unit:Unit(*, product:Product(*))")
+      .order("createdAt", { ascending: false });
+    if (data) orders = data;
+  } catch (err) {
+    console.warn("Supabase admin orders fetch error:", err);
+  }
+
+  if (orders.length === 0) {
+    try {
+      orders = await prisma.order.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          unit: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
-  } catch (err) {
-    console.error("Failed to load orders in admin:", err);
+      });
+    } catch (err) {
+      console.error("Failed to load orders in admin:", err);
+    }
   }
 
   return (

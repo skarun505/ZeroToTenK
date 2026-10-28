@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { PaymentsQueueClient } from "@/components/admin/PaymentsQueueClient";
 import { ArrowLeft, CreditCard } from "lucide-react";
 
@@ -16,23 +17,36 @@ export default async function AdminPaymentsPage() {
 
   let pendingOrders: any[] = [];
   try {
-    pendingOrders = await prisma.order.findMany({
-      where: {
-        status: "PAYMENT_SUBMITTED",
-      },
-      orderBy: {
-        utrSubmittedAt: "asc",
-      },
-      include: {
-        unit: {
-          include: {
-            product: true,
+    const { data } = await supabase
+      .from("Order")
+      .select("*, unit:Unit(*, product:Product(*))")
+      .eq("status", "PAYMENT_SUBMITTED")
+      .order("utrSubmittedAt", { ascending: true });
+    if (data) pendingOrders = data;
+  } catch (err) {
+    console.warn("Supabase admin payments fetch error:", err);
+  }
+
+  if (pendingOrders.length === 0) {
+    try {
+      pendingOrders = await prisma.order.findMany({
+        where: {
+          status: "PAYMENT_SUBMITTED",
+        },
+        orderBy: {
+          utrSubmittedAt: "asc",
+        },
+        include: {
+          unit: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
-  } catch (err) {
-    console.error("Failed to load pending payments in admin:", err);
+      });
+    } catch (err) {
+      console.error("Failed to load pending payments in admin:", err);
+    }
   }
 
   return (

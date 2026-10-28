@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { InventoryManagerClient } from "@/components/admin/InventoryManagerClient";
 import { ArrowLeft, Package } from "lucide-react";
 
@@ -17,36 +18,49 @@ export default async function AdminInventoryPage() {
   let products: any[] = [];
   let units: any[] = [];
   try {
-    products = await prisma.product.findMany({
-      select: {
-        id: true,
-        title: true,
-        brand: true,
-        modelNumber: true,
-        mrp: true,
-      },
-      orderBy: {
-        title: "asc",
-      },
-    });
+    const [pRes, uRes] = await Promise.all([
+      supabase.from("Product").select("id, title, brand, modelNumber, mrp").order("title", { ascending: true }),
+      supabase.from("Unit").select("*, product:Product(id, title, modelNumber, mrp)").order("createdAt", { ascending: false }),
+    ]);
+    if (pRes.data) products = pRes.data;
+    if (uRes.data) units = uRes.data;
+  } catch (err) {
+    console.warn("Supabase admin inventory fetch error:", err);
+  }
 
-    units = await prisma.unit.findMany({
-      include: {
-        product: {
-          select: {
-            id: true,
-            title: true,
-            modelNumber: true,
-            mrp: true,
+  if (products.length === 0 || units.length === 0) {
+    try {
+      products = await prisma.product.findMany({
+        select: {
+          id: true,
+          title: true,
+          brand: true,
+          modelNumber: true,
+          mrp: true,
+        },
+        orderBy: {
+          title: "asc",
+        },
+      });
+
+      units = await prisma.unit.findMany({
+        include: {
+          product: {
+            select: {
+              id: true,
+              title: true,
+              modelNumber: true,
+              mrp: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-  } catch (err) {
-    console.error("Failed to load inventory in admin:", err);
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    } catch (err) {
+      console.error("Failed to load inventory in admin:", err);
+    }
   }
 
   return (
