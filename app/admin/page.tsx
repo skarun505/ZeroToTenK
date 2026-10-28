@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { formatINR } from "@/lib/utils";
 import {
@@ -32,7 +33,7 @@ export default async function AdminDashboardPage() {
     );
   }
 
-  // Fetch admin dashboard stats
+  // Fetch admin dashboard stats (Supabase Primary)
   let totalUnits = 0;
   let availableUnits = 0;
   let reservedUnits = 0;
@@ -43,33 +44,63 @@ export default async function AdminDashboardPage() {
   let dbError: string | null = null;
 
   try {
-    totalUnits = await prisma.unit.count();
-    availableUnits = await prisma.unit.count({ where: { status: "AVAILABLE" } });
-    reservedUnits = await prisma.unit.count({ where: { status: "RESERVED" } });
-    soldUnits = await prisma.unit.count({ where: { status: "SOLD" } });
+    const [unitsRes, ordersRes] = await Promise.all([
+      supabase.from("Unit").select("id, status, pricePaise"),
+      supabase.from("Order").select("*, unit:Unit(*, product:Product(*))").order("createdAt", { ascending: false }),
+    ]);
 
-    pendingPayments = await prisma.order.count({
-      where: { status: "PAYMENT_SUBMITTED" },
-    });
+    if (unitsRes.data) {
+      const uList = unitsRes.data;
+      totalUnits = uList.length;
+      availableUnits = uList.filter((u: any) => u.status === "AVAILABLE").length;
+      reservedUnits = uList.filter((u: any) => u.status === "RESERVED").length;
+      soldUnits = uList.filter((u: any) => u.status === "SOLD").length;
+    }
 
-    allOrders = await prisma.order.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      include: {
-        unit: {
-          include: { product: true },
-        },
-      },
-    });
-
-    const revenueOrders = await prisma.order.findMany({
-      where: { status: { in: ["VERIFIED", "PAID", "SHIPPED", "DELIVERED"] } },
-      select: { amountPaise: true },
-    });
-    totalRevenuePaise = revenueOrders.reduce((acc, curr) => acc + curr.amountPaise, 0);
+    if (ordersRes.data) {
+      const oList = ordersRes.data;
+      pendingPayments = oList.filter((o: any) => o.status === "PAYMENT_SUBMITTED").length;
+      allOrders = oList.slice(0, 10);
+      const verified = oList.filter((o: any) => ["VERIFIED", "PAID", "SHIPPED", "DELIVERED"].includes(o.status));
+      totalRevenuePaise = verified.reduce((acc: number, curr: any) => acc + (curr.amountPaise || 0), 0);
+    }
   } catch (err: any) {
-    console.error("Admin dashboard database error:", err);
-    dbError = err?.message || "Failed to connect to database";
+    console.warn("Supabase admin fetch error, trying Prisma fallback:", err);
+  }
+
+  // If Supabase didn't load any units or orders, try Prisma as fallback
+  if (totalUnits === 0 && allOrders.length === 0) {
+    try {
+      totalUnits = await prisma.unit.count();
+      availableUnits = await prisma.unit.count({ where: { status: "AVAILABLE" } });
+      reservedUnits = await prisma.unit.count({ where: { status: "RESERVED" } });
+      soldUnits = await prisma.unit.count({ where: { status: "SOLD" } });
+
+      pendingPayments = await prisma.order.count({
+        where: { status: "PAYMENT_SUBMITTED" },
+      });
+
+      allOrders = await prisma.order.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        include: {
+          unit: {
+            include: { product: true },
+          },
+        },
+      });
+
+      const revenueOrders = await prisma.order.findMany({
+        where: { status: { in: ["VERIFIED", "PAID", "SHIPPED", "DELIVERED"] } },
+        select: { amountPaise: true },
+      });
+      totalRevenuePaise = revenueOrders.reduce((acc, curr) => acc + curr.amountPaise, 0);
+    } catch (err: any) {
+      if (totalUnits === 0 && allOrders.length === 0) {
+        console.error("Admin dashboard database error:", err);
+        dbError = err?.message || "Failed to connect to database";
+      }
+    }
   }
 
   return (
@@ -292,10 +323,10 @@ export default async function AdminDashboardPage() {
                   <td className="py-3 font-mono font-medium">{ord.id.slice(-8).toUpperCase()}</td>
                   <td className="py-3">
                     <div className="font-semibold text-slate-800 dark:text-slate-200">
-                      {ord.unit.product.title}
+                      {ord.unit?.product?.title || "Digital Playbook Order"}
                     </div>
                     <div className="text-[10px] text-slate-500 font-mono">
-                      IMEI: ••••{ord.unit.serialOrImei.slice(-4)} &bull; Grade {ord.unit.grade}
+                      {ord.unit ? `License: ••••${(ord.unit.serialOrImei || "").slice(-4)} • Grade ${ord.unit.grade}` : "Instant Digital Access"}
                     </div>
                   </td>
                   <td className="py-3 font-bold text-slate-900 dark:text-slate-100">
