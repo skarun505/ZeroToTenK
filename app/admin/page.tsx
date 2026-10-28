@@ -5,15 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { supabase } from "@/lib/supabase";
 import { AdminLoginForm } from "@/components/admin/AdminLoginForm";
 import { AdminAnalyticsDashboard } from "@/components/admin/AdminAnalyticsDashboard";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import {
-  CreditCard,
-  Package,
-  PlusCircle,
-  Layers,
-  AlertCircle,
-  ShoppingBag,
-} from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +82,7 @@ export default async function AdminDashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {dbError && (
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-sm flex items-start gap-3">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" />
@@ -103,71 +95,7 @@ export default async function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Top Header & Fast Navigation Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-6 transition-colors">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
-              Live Production Analytics
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
-              Edge Synced
-            </span>
-          </div>
-          <div className="flex items-center gap-3 mt-2">
-            <div className="bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md inline-block">
-              <img
-                src="/logo.svg"
-                alt="ZeroToTenK"
-                className="h-7 w-auto object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                Executive Sales &amp; Growth Matrix
-              </h1>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                Real-time revenue curves, AOV velocity, best-selling digital blueprints, and fulfillment stream.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Light / Dark Mode Toggle */}
-          <ThemeToggle variant="nav" />
-
-          <Link
-            href="/admin/products"
-            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
-          >
-            <Layers className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-            <span>Product Catalog</span>
-          </Link>
-          <Link
-            href="/admin/inventory"
-            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-colors"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Manage Licenses</span>
-          </Link>
-          <Link
-            href="/admin/payments"
-            className="relative px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold flex items-center gap-2 shadow-md transition-all"
-          >
-            <CreditCard className="w-4 h-4" />
-            <span>Verify Payments</span>
-            {pendingPayments > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-black animate-pulse">
-                {pendingPayments}
-              </span>
-            )}
-          </Link>
-        </div>
-      </div>
-
-      {/* Main Interactive Analytics & Reports Dashboard */}
+      {/* Main Interactive Analytics & Reports Dashboard with Meta Ads Date Filtering */}
       <AdminAnalyticsDashboard
         initialOrders={allOrders}
         initialUnits={allUnits}

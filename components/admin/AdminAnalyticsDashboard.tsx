@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { formatINR } from "@/lib/utils";
 import {
@@ -8,7 +8,6 @@ import {
   CreditCard,
   Package,
   ShoppingBag,
-  Clock,
   Sparkles,
   ArrowUpRight,
   Search,
@@ -16,13 +15,26 @@ import {
   Layers,
   Award,
   BarChart3,
-  Flame,
   CheckCircle2,
   AlertCircle,
   ExternalLink,
   ChevronRight,
-  BookOpen,
+  ChevronDown,
+  Calendar,
+  Check,
+  RotateCcw,
+  Clock,
 } from "lucide-react";
+
+export type MetaDatePreset =
+  | "TODAY"
+  | "YESTERDAY"
+  | "LAST_7D"
+  | "LAST_14D"
+  | "LAST_30D"
+  | "LAST_90D"
+  | "ALL"
+  | "CUSTOM";
 
 interface AdminAnalyticsProps {
   initialOrders: any[];
@@ -30,14 +42,24 @@ interface AdminAnalyticsProps {
   initialProducts: any[];
 }
 
-type TimeRange = "7D" | "30D" | "ALL";
-
 export function AdminAnalyticsDashboard({
   initialOrders,
   initialUnits,
   initialProducts,
 }: AdminAnalyticsProps) {
-  const [timeRange, setTimeRange] = useState<TimeRange>("30D");
+  // Preset selector state
+  const [preset, setPreset] = useState<MetaDatePreset>("LAST_30D");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Custom date picker range (default to past 30 days)
+  const defaultEnd = new Date().toISOString().slice(0, 10);
+  const defaultStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [customStart, setCustomStart] = useState<string>(defaultStart);
+  const [customEnd, setCustomEnd] = useState<string>(defaultEnd);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [hoveredPoint, setHoveredPoint] = useState<{
@@ -48,26 +70,186 @@ export function AdminAnalyticsDashboard({
     y: number;
   } | null>(null);
 
-  // Filter orders by selected time range
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Compute exact timestamp boundaries for current preset
+  const dateRangeBounds = useMemo(() => {
+    const now = new Date();
+    // Start of today: 00:00:00
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,
+      0,
+      0,
+      0
+    ).getTime();
+    const endOfToday = now.getTime();
+
+    // Start of yesterday: 00:00:00, End of yesterday: 23:59:59.999
+    const startOfYesterday = startOfToday - 24 * 60 * 60 * 1000;
+    const endOfYesterday = startOfToday - 1;
+
+    switch (preset) {
+      case "TODAY":
+        return {
+          label: "Today",
+          startMs: startOfToday,
+          endMs: endOfToday,
+          type: "hourly",
+          formatted: new Date().toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }),
+        };
+      case "YESTERDAY":
+        return {
+          label: "Yesterday",
+          startMs: startOfYesterday,
+          endMs: endOfYesterday,
+          type: "hourly",
+          formatted: new Date(startOfYesterday).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }),
+        };
+      case "LAST_7D": {
+        const start = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+        return {
+          label: "Last 7 Days",
+          startMs: start,
+          endMs: now.getTime(),
+          type: "daily",
+          formatted: `${new Date(start).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+          })} – ${now.toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}`,
+        };
+      }
+      case "LAST_14D": {
+        const start = now.getTime() - 14 * 24 * 60 * 60 * 1000;
+        return {
+          label: "Last 14 Days",
+          startMs: start,
+          endMs: now.getTime(),
+          type: "daily",
+          formatted: `${new Date(start).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+          })} – ${now.toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}`,
+        };
+      }
+      case "LAST_30D": {
+        const start = now.getTime() - 30 * 24 * 60 * 60 * 1000;
+        return {
+          label: "Last 30 Days",
+          startMs: start,
+          endMs: now.getTime(),
+          type: "daily",
+          formatted: `${new Date(start).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+          })} – ${now.toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}`,
+        };
+      }
+      case "LAST_90D": {
+        const start = now.getTime() - 90 * 24 * 60 * 60 * 1000;
+        return {
+          label: "Last 3 Months",
+          startMs: start,
+          endMs: now.getTime(),
+          type: "daily",
+          formatted: `${new Date(start).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+          })} – ${now.toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}`,
+        };
+      }
+      case "CUSTOM": {
+        const start = customStart
+          ? new Date(`${customStart}T00:00:00`).getTime()
+          : now.getTime() - 30 * 24 * 60 * 60 * 1000;
+        const end = customEnd
+          ? new Date(`${customEnd}T23:59:59.999`).getTime()
+          : now.getTime();
+        return {
+          label: "Custom Range",
+          startMs: Math.min(start, end),
+          endMs: Math.max(start, end),
+          type: "daily",
+          formatted: `${new Date(start).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+          })} – ${new Date(end).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}`,
+        };
+      }
+      case "ALL":
+      default:
+        return {
+          label: "All Time",
+          startMs: 0,
+          endMs: now.getTime(),
+          type: "daily",
+          formatted: "Lifetime All Records",
+        };
+    }
+  }, [preset, customStart, customEnd]);
+
+  // Filter orders strictly within the selected date window
   const filteredByDate = useMemo(() => {
-    if (timeRange === "ALL") return initialOrders;
-
-    const now = Date.now();
-    const days = timeRange === "7D" ? 7 : 30;
-    const cutoff = now - days * 24 * 60 * 60 * 1000;
-
     return initialOrders.filter((o) => {
       const orderTime = new Date(o.createdAt).getTime();
-      return orderTime >= cutoff;
+      return (
+        orderTime >= dateRangeBounds.startMs && orderTime <= dateRangeBounds.endMs
+      );
     });
-  }, [initialOrders, timeRange]);
+  }, [initialOrders, dateRangeBounds]);
 
-  // Compute Core Executive Metrics
+  // Compute Core Executive Metrics for the timeframe
   const metrics = useMemo(() => {
     const verifiedOrders = filteredByDate.filter((o) =>
       ["VERIFIED", "PAID", "SHIPPED", "DELIVERED"].includes(o.status)
     );
-    const pendingOrders = filteredByDate.filter((o) => o.status === "PAYMENT_SUBMITTED");
+    const pendingOrders = filteredByDate.filter(
+      (o) => o.status === "PAYMENT_SUBMITTED"
+    );
 
     const totalRevenuePaise = verifiedOrders.reduce(
       (sum, o) => sum + (o.amountPaise || 0),
@@ -79,7 +261,6 @@ export function AdminAnalyticsDashboard({
         ? Math.round(totalRevenuePaise / verifiedOrders.length)
         : 0;
 
-    // High ticket sales (items >= ₹2,999 / 299,900 paise)
     const highTicketOrders = verifiedOrders.filter(
       (o) => (o.amountPaise || 0) >= 299900
     );
@@ -94,7 +275,9 @@ export function AdminAnalyticsDashboard({
         : 0;
 
     const totalUnits = initialUnits.length;
-    const availableUnits = initialUnits.filter((u) => u.status === "AVAILABLE").length;
+    const availableUnits = initialUnits.filter(
+      (u) => u.status === "AVAILABLE"
+    ).length;
     const soldUnits = initialUnits.filter((u) => u.status === "SOLD").length;
 
     return {
@@ -111,38 +294,83 @@ export function AdminAnalyticsDashboard({
     };
   }, [filteredByDate, initialUnits]);
 
-  // Daily Chart Aggregation
+  // Chart Data Aggregation (Adaptive: Hourly for Today/Yesterday, Daily for other ranges)
   const chartData = useMemo(() => {
-    const days = timeRange === "7D" ? 7 : timeRange === "30D" ? 30 : 60;
-    const map = new Map<string, { date: string; revenue: number; orders: number }>();
+    const map = new Map<
+      string,
+      { date: string; revenue: number; orders: number }
+    >();
 
-    const now = new Date();
-    // Pre-populate days
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const key = d.toISOString().slice(0, 10);
-      map.set(key, {
-        date: d.toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
-        revenue: 0,
-        orders: 0,
+    if (dateRangeBounds.type === "hourly") {
+      // 6 time blocks across the 24 hours: 12 AM, 4 AM, 8 AM, 12 PM, 4 PM, 8 PM
+      const hours = [0, 4, 8, 12, 16, 20];
+      hours.forEach((h) => {
+        const timeStr = `${h === 0 ? "12" : h > 12 ? h - 12 : h}:00 ${
+          h >= 12 ? "PM" : "AM"
+        }`;
+        map.set(h.toString(), {
+          date: timeStr,
+          revenue: 0,
+          orders: 0,
+        });
+      });
+
+      filteredByDate.forEach((o) => {
+        const d = new Date(o.createdAt);
+        const hour = d.getHours();
+        // Bucket into the closest 4-hour window
+        const bucket = Math.floor(hour / 4) * 4;
+        const key = bucket.toString();
+        if (map.has(key)) {
+          const item = map.get(key)!;
+          item.orders += 1;
+          if (["VERIFIED", "PAID", "SHIPPED", "DELIVERED"].includes(o.status)) {
+            item.revenue += (o.amountPaise || 0) / 100;
+          }
+        }
+      });
+    } else {
+      // Daily intervals
+      const startMs =
+        dateRangeBounds.startMs === 0
+          ? Date.now() - 30 * 24 * 60 * 60 * 1000
+          : dateRangeBounds.startMs;
+      const endMs = dateRangeBounds.endMs;
+      const dayDiff = Math.max(
+        1,
+        Math.min(90, Math.ceil((endMs - startMs) / (24 * 60 * 60 * 1000)))
+      );
+
+      // Pre-fill daily slots
+      for (let i = dayDiff - 1; i >= 0; i--) {
+        const d = new Date(endMs - i * 24 * 60 * 60 * 1000);
+        const key = d.toISOString().slice(0, 10);
+        map.set(key, {
+          date: d.toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+          }),
+          revenue: 0,
+          orders: 0,
+        });
+      }
+
+      filteredByDate.forEach((o) => {
+        const key = new Date(o.createdAt).toISOString().slice(0, 10);
+        if (map.has(key)) {
+          const item = map.get(key)!;
+          item.orders += 1;
+          if (["VERIFIED", "PAID", "SHIPPED", "DELIVERED"].includes(o.status)) {
+            item.revenue += (o.amountPaise || 0) / 100;
+          }
+        }
       });
     }
 
-    filteredByDate.forEach((o) => {
-      const key = new Date(o.createdAt).toISOString().slice(0, 10);
-      if (map.has(key)) {
-        const item = map.get(key)!;
-        item.orders += 1;
-        if (["VERIFIED", "PAID", "SHIPPED", "DELIVERED"].includes(o.status)) {
-          item.revenue += (o.amountPaise || 0) / 100;
-        }
-      }
-    });
-
     return Array.from(map.values());
-  }, [filteredByDate, timeRange]);
+  }, [filteredByDate, dateRangeBounds]);
 
-  // Top Selling Products Leaderboard
+  // Top Selling Products Leaderboard for the active timeframe
   const topSellers = useMemo(() => {
     const productSales = new Map<
       string,
@@ -170,14 +398,12 @@ export function AdminAnalyticsDashboard({
       productSales.set(prod.id, curr);
     });
 
-    const list = Array.from(productSales.values()).sort(
-      (a, b) => b.revenuePaise - a.revenuePaise
-    );
-
-    return list.slice(0, 5);
+    return Array.from(productSales.values())
+      .sort((a, b) => b.revenuePaise - a.revenuePaise)
+      .slice(0, 5);
   }, [filteredByDate]);
 
-  // Category Revenue Distribution
+  // Category Revenue Distribution for the active timeframe
   const categoryStats = useMemo(() => {
     const categories: Record<
       string,
@@ -205,7 +431,7 @@ export function AdminAnalyticsDashboard({
         name: "Funnels & Copy",
         revenuePaise: 0,
         count: 0,
-        color: "#8b5cf6", // Violet
+        color: "#ec4899", // Pink
       },
       "automation-and-scaling": {
         name: "Automation & Scale",
@@ -213,40 +439,32 @@ export function AdminAnalyticsDashboard({
         count: 0,
         color: "#06b6d4", // Cyan
       },
-      "creation-and-writing": {
-        name: "Creation & Writing",
-        revenuePaise: 0,
-        count: 0,
-        color: "#ec4899", // Pink
-      },
     };
 
     filteredByDate.forEach((o) => {
-      const cat = o.unit?.product?.category;
-      if (cat && categories[cat]) {
-        categories[cat].count += 1;
-        if (["VERIFIED", "PAID", "SHIPPED", "DELIVERED"].includes(o.status)) {
-          categories[cat].revenuePaise += o.amountPaise || 0;
-        }
+      const cat = o.unit?.product?.category || "blueprint-courses";
+      const bucket = categories[cat] || categories["blueprint-courses"];
+      bucket.count += 1;
+      if (["VERIFIED", "PAID", "SHIPPED", "DELIVERED"].includes(o.status)) {
+        bucket.revenuePaise += o.amountPaise || 0;
       }
     });
 
-    return Object.values(categories).filter((c) => c.count > 0 || c.revenuePaise > 0);
+    return Object.values(categories);
   }, [filteredByDate]);
 
-  // Filtered recent orders
+  // Filtered orders table matching search and payment status
   const displayedOrders = useMemo(() => {
-    return initialOrders.filter((ord) => {
-      const matchesStatus =
-        statusFilter === "ALL" || ord.status === statusFilter;
-
-      if (!matchesStatus) return false;
+    return filteredByDate.filter((ord) => {
+      if (statusFilter !== "ALL" && ord.status !== statusFilter) return false;
 
       if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
 
-      const q = searchQuery.toLowerCase();
       const idMatch = ord.id.toLowerCase().includes(q);
-      const titleMatch = ord.unit?.product?.title?.toLowerCase().includes(q);
+      const titleMatch = (ord.unit?.product?.title || "")
+        .toLowerCase()
+        .includes(q);
       const payerMatch = ord.payerName?.toLowerCase().includes(q);
       const utrMatch = ord.utr?.toLowerCase().includes(q);
 
@@ -256,15 +474,17 @@ export function AdminAnalyticsDashboard({
         shipName = (s.name || "").toLowerCase();
       } catch {}
 
-      return idMatch || titleMatch || payerMatch || utrMatch || shipName.includes(q);
+      return (
+        idMatch || titleMatch || payerMatch || utrMatch || shipName.includes(q)
+      );
     });
-  }, [initialOrders, statusFilter, searchQuery]);
+  }, [filteredByDate, statusFilter, searchQuery]);
 
   // Chart SVG Coordinates Calculation
   const maxRevenue = Math.max(...chartData.map((d) => d.revenue), 1000);
   const chartWidth = 800;
   const chartHeight = 220;
-  const paddingX = 40;
+  const paddingX = 45;
   const paddingY = 30;
 
   const points = chartData.map((d, index) => {
@@ -293,42 +513,195 @@ export function AdminAnalyticsDashboard({
     chartHeight - paddingY
   } L ${points[0]?.x || 0} ${chartHeight - paddingY} Z`;
 
+  const metaPresetsList: { id: MetaDatePreset; label: string; desc: string }[] =
+    [
+      { id: "TODAY", label: "Today", desc: "Since 12:00 AM today" },
+      { id: "YESTERDAY", label: "Yesterday", desc: "Full day yesterday" },
+      { id: "LAST_7D", label: "Last 7 Days", desc: "Past 7 days up to now" },
+      { id: "LAST_14D", label: "Last 14 Days", desc: "Past 2 weeks" },
+      { id: "LAST_30D", label: "Last 30 Days", desc: "Standard monthly cohort" },
+      { id: "LAST_90D", label: "Last 3 Months", desc: "Quarterly trends (90 days)" },
+      { id: "ALL", label: "All Time", desc: "Lifetime recorded orders" },
+      { id: "CUSTOM", label: "Custom Range...", desc: "Select specific dates" },
+    ];
+
   return (
     <div className="space-y-8 transition-colors">
-      {/* Top Bar with Time Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-xs transition-colors">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-            <BarChart3 className="w-5 h-5" />
-          </div>
+      {/* Meta Ads Style Executive Header & Date Range Controller */}
+      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 transition-colors">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>Executive Performance Analytics</span>
-              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-700/50 text-emerald-700 dark:text-emerald-400">
-                Live Data
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-widest">
+                Meta Ads Performance Filter
               </span>
+              <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+                &bull;
+              </span>
+              <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold hidden sm:inline">
+                Real-time Cohort Velocity
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
+              Sales, AOV &amp; Conversion Analytics
             </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Real-time revenue, average order value, conversion trends, and catalog velocity.
-            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                Active Window:
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 font-mono font-bold">
+                {dateRangeBounds.formatted}
+              </span>
+              <span>&bull;</span>
+              <span>{filteredByDate.length} orders in range</span>
+              <span>&bull;</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                {formatINR(metrics.totalRevenuePaise)} settled
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Time Period Filter Tabs */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
-          {(["7D", "30D", "ALL"] as TimeRange[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setTimeRange(tab)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                timeRange === tab
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800/60"
-              }`}
-            >
-              {tab === "7D" ? "Last 7 Days" : tab === "30D" ? "Last 30 Days" : "All Time"}
-            </button>
-          ))}
+          {/* Meta Ads Style Interactive Date Range Dropdown Popover */}
+          <div className="relative" ref={dropdownRef}>
+            <div className="flex items-center gap-2">
+              {/* Quick Pills for 7D / 30D / All */}
+              <div className="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
+                {(["TODAY", "LAST_7D", "LAST_30D", "LAST_90D"] as MetaDatePreset[]).map(
+                  (p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPreset(p)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        preset === p
+                          ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      {p === "TODAY"
+                        ? "Today"
+                        : p === "LAST_7D"
+                        ? "7D"
+                        : p === "LAST_30D"
+                        ? "30D"
+                        : "3M"}
+                    </button>
+                  )
+                )}
+              </div>
+
+              {/* Master Dropdown Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-2 shadow-xs transition-all hover:border-emerald-500"
+              >
+                <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{dateRangeBounds.label}</span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Dropdown Menu Modal (Meta Ads Style) */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-4 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                    Select Time Horizon
+                  </div>
+                  <button
+                    onClick={() => setPreset("LAST_30D")}
+                    className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    Reset to 30D
+                  </button>
+                </div>
+
+                {/* Preset List */}
+                <div className="grid grid-cols-2 gap-1.5">
+                  {metaPresetsList.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setPreset(item.id);
+                        if (item.id !== "CUSTOM") {
+                          setIsDropdownOpen(false);
+                        }
+                      }}
+                      className={`text-left p-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all ${
+                        preset === item.id
+                          ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60"
+                          : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-transparent"
+                      }`}
+                    >
+                      <div>
+                        <div>{item.label}</div>
+                        <div className="text-[10px] text-slate-400 font-normal">
+                          {item.desc}
+                        </div>
+                      </div>
+                      {preset === item.id && (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Date Range Picker Fields */}
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="font-bold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Custom Date Span (Meta Ads Style)</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        value={customStart}
+                        onChange={(e) => {
+                          setCustomStart(e.target.value);
+                          setPreset("CUSTOM");
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 text-xs focus:outline-hidden focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={customEnd}
+                        onChange={(e) => {
+                          setCustomEnd(e.target.value);
+                          setPreset("CUSTOM");
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 text-xs focus:outline-hidden focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setPreset("CUSTOM");
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full py-2 rounded-xl btn-emerald text-xs font-bold text-white shadow-xs"
+                  >
+                    Apply Custom Date Range
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -347,7 +720,9 @@ export function AdminAnalyticsDashboard({
           </div>
           <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>{metrics.verifiedCount} paid customer orders</span>
+            <span>
+              {metrics.verifiedCount} verified sales in {dateRangeBounds.label}
+            </span>
           </div>
         </div>
 
@@ -364,7 +739,9 @@ export function AdminAnalyticsDashboard({
           </div>
           <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-semibold">
             <span>Revenue ÷ Paid Orders</span>
-            <span className="text-indigo-600 dark:text-indigo-400 font-bold">Target: &gt; ₹500</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-bold">
+              Benchmark: &gt; ₹500
+            </span>
           </div>
         </div>
 
@@ -381,7 +758,9 @@ export function AdminAnalyticsDashboard({
           </div>
           <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-semibold">
             <span>{metrics.highTicketShare}% Masterclass &gt;₹2,999</span>
-            <span className="text-amber-600 dark:text-amber-400">{metrics.pendingCount} in queue</span>
+            <span className="text-amber-600 dark:text-amber-400">
+              {metrics.pendingCount} pending UTR
+            </span>
           </div>
         </div>
 
@@ -394,7 +773,10 @@ export function AdminAnalyticsDashboard({
             </div>
           </div>
           <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            {metrics.availableUnits} <span className="text-lg text-slate-500 dark:text-slate-400 font-normal">/ {metrics.totalUnits}</span>
+            {metrics.availableUnits}{" "}
+            <span className="text-lg text-slate-500 dark:text-slate-400 font-normal">
+              / {metrics.totalUnits}
+            </span>
           </div>
           <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-semibold">
             <span>{metrics.soldUnits} fulfilled devices/units</span>
@@ -409,10 +791,10 @@ export function AdminAnalyticsDashboard({
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-              <span>Daily Sales &amp; Revenue Trend</span>
+              <span>Sales &amp; Revenue Curve ({dateRangeBounds.label})</span>
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-              Hover over graph data points to inspect daily transaction volume and rupee collections.
+              Hover over graph data points to inspect {dateRangeBounds.type === "hourly" ? "hourly intraday" : "daily"} transaction volume and rupee collections.
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-400">
@@ -441,18 +823,20 @@ export function AdminAnalyticsDashboard({
               </linearGradient>
             </defs>
 
-            {/* Horizontal Gridlines */}
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-              const y = chartHeight - paddingY - ratio * (chartHeight - paddingY * 2);
-              const val = Math.round(maxRevenue * ratio);
+            {/* Horizontal Grid lines */}
+            {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => {
+              const y =
+                chartHeight - paddingY - pct * (chartHeight - paddingY * 2);
+              const val = Math.round(pct * maxRevenue);
               return (
-                <g key={ratio}>
+                <g key={idx}>
                   <line
                     x1={paddingX}
                     y1={y}
                     x2={chartWidth - paddingX}
                     y2={y}
-                    stroke="#1e293b"
+                    stroke="#94a3b8"
+                    strokeOpacity="0.25"
                     strokeDasharray="4 4"
                   />
                   <text
@@ -488,7 +872,7 @@ export function AdminAnalyticsDashboard({
                   cx={pt.x}
                   cy={pt.y}
                   r="5"
-                  fill="#090d16"
+                  fill="#ffffff"
                   stroke="#10b981"
                   strokeWidth="2.5"
                   className="transition-transform group-hover:scale-150"
@@ -509,7 +893,6 @@ export function AdminAnalyticsDashboard({
 
             {/* Date labels on X Axis */}
             {points.map((pt, idx) => {
-              // Show label every few points to avoid crowding
               const step = Math.ceil(points.length / 7);
               if (idx % step !== 0 && idx !== points.length - 1) return null;
               return (
@@ -531,7 +914,7 @@ export function AdminAnalyticsDashboard({
           {/* Hover Tooltip Box */}
           {hoveredPoint && (
             <div
-              className="absolute z-20 pointer-events-none bg-slate-950/95 border border-emerald-500/50 shadow-2xl p-2.5 rounded-xl text-xs space-y-1 backdrop-blur-md"
+              className="absolute z-20 pointer-events-none bg-slate-900/95 dark:bg-slate-950/95 text-white border border-emerald-500/50 shadow-2xl p-2.5 rounded-xl text-xs space-y-1 backdrop-blur-md"
               style={{
                 left: `${(hoveredPoint.x / chartWidth) * 100}%`,
                 top: `${(hoveredPoint.y / chartHeight) * 100}%`,
@@ -544,8 +927,9 @@ export function AdminAnalyticsDashboard({
               <div className="text-emerald-400 font-extrabold text-sm">
                 ₹{hoveredPoint.revenue.toLocaleString("en-IN")}
               </div>
-              <div className="text-[11px] text-slate-400">
-                {hoveredPoint.orders} {hoveredPoint.orders === 1 ? "order" : "orders"}
+              <div className="text-[11px] text-slate-300">
+                {hoveredPoint.orders}{" "}
+                {hoveredPoint.orders === 1 ? "order" : "orders"}
               </div>
             </div>
           )}
@@ -559,9 +943,11 @@ export function AdminAnalyticsDashboard({
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Award className="w-5 h-5 text-amber-500" />
-              <span>Top-Selling Digital Playbooks</span>
+              <span>Top-Selling Playbooks ({dateRangeBounds.label})</span>
             </h3>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Ranked by Revenue</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+              Ranked by Revenue
+            </span>
           </div>
 
           <div className="space-y-3">
@@ -582,7 +968,7 @@ export function AdminAnalyticsDashboard({
               const badgeColors = [
                 "bg-amber-500 text-slate-950", // Gold #1
                 "bg-slate-300 text-slate-950", // Silver #2
-                "bg-amber-700 text-white",     // Bronze #3
+                "bg-amber-700 text-white", // Bronze #3
                 "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
                 "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
               ];
@@ -639,7 +1025,7 @@ export function AdminAnalyticsDashboard({
 
             {topSellers.length === 0 && (
               <div className="p-8 text-center text-slate-500 text-xs">
-                No orders recorded in this date range.
+                No verified sales recorded for {dateRangeBounds.label}.
               </div>
             )}
           </div>
@@ -650,9 +1036,11 @@ export function AdminAnalyticsDashboard({
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Layers className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
-              <span>Category Revenue Share</span>
+              <span>Category Revenue Share ({dateRangeBounds.label})</span>
             </h3>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Distribution</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+              Distribution
+            </span>
           </div>
 
           {/* Segmented Distribution Bar */}
@@ -678,7 +1066,9 @@ export function AdminAnalyticsDashboard({
             {categoryStats.map((cat, idx) => {
               const pct =
                 metrics.totalRevenuePaise > 0
-                  ? Math.round((cat.revenuePaise / metrics.totalRevenuePaise) * 100)
+                  ? Math.round(
+                      (cat.revenuePaise / metrics.totalRevenuePaise) * 100
+                    )
                   : 0;
 
               return (
@@ -717,7 +1107,7 @@ export function AdminAnalyticsDashboard({
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span>Real-Time Order Stream</span>
+              <span>Real-Time Order Stream ({dateRangeBounds.label})</span>
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
               Live transaction records, instant UTR status, customer details, and invoice links.
@@ -767,7 +1157,7 @@ export function AdminAnalyticsDashboard({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {displayedOrders.slice(0, 15).map((ord) => {
+              {displayedOrders.slice(0, 20).map((ord) => {
                 let shipping: any = {};
                 try {
                   shipping = JSON.parse(ord.shippingJson);
@@ -787,7 +1177,9 @@ export function AdminAnalyticsDashboard({
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono">
                         {ord.unit
-                          ? `License: ••••${(ord.unit.serialOrImei || "").slice(-4)}`
+                          ? `License: ••••${(ord.unit.serialOrImei || "").slice(
+                              -4
+                            )}`
                           : "Instant Download Access"}
                       </div>
                     </td>
@@ -796,7 +1188,9 @@ export function AdminAnalyticsDashboard({
                         {ord.payerName || shipping.name || "Customer"}
                       </div>
                       <div className="text-[10px] text-slate-500">
-                        {shipping.city ? `${shipping.city}, ${shipping.state || ""}` : "Online Access"}
+                        {shipping.city
+                          ? `${shipping.city}, ${shipping.state || ""}`
+                          : "Online Access"}
                       </div>
                     </td>
                     <td className="py-3 font-black text-slate-900 dark:text-white">
@@ -814,7 +1208,9 @@ export function AdminAnalyticsDashboard({
                             : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                         }`}
                       >
-                        {ord.status === "PAYMENT_SUBMITTED" ? "PENDING UTR" : ord.status}
+                        {ord.status === "PAYMENT_SUBMITTED"
+                          ? "PENDING UTR"
+                          : ord.status}
                       </span>
                     </td>
                     <td className="py-3 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
@@ -840,8 +1236,11 @@ export function AdminAnalyticsDashboard({
 
               {displayedOrders.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500 text-xs">
-                    No matching orders found.
+                  <td
+                    colSpan={7}
+                    className="py-8 text-center text-slate-500 text-xs"
+                  >
+                    No matching orders found for {dateRangeBounds.label}.
                   </td>
                 </tr>
               )}
