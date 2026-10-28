@@ -7,7 +7,7 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { TrustBlock } from "@/components/TrustBlock";
 import { FlashSaleClient } from "@/components/FlashSaleClient";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "18-Hour Creator Flash Sale | Flat 75% OFF All eBooks - ZeroToTenK",

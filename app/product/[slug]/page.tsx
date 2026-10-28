@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ProductDetailClient } from "@/components/ProductDetailClient";
 import type { Metadata } from "next";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 interface ProductPageProps {
   params: {
@@ -31,19 +31,6 @@ const getProduct = cache(async (slug: string) => {
     return null;
   }
 });
-
-// Pre-render product routes at build time for 0ms instant loading
-export async function generateStaticParams() {
-  try {
-    const products = await prisma.product.findMany({
-      select: { slug: true },
-      take: 50,
-    });
-    return products.map((p) => ({ slug: p.slug }));
-  } catch {
-    return [];
-  }
-}
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const product = await getProduct(params.slug);
