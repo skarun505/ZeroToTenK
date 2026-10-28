@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 850" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-zerototenk-all-access-empire-bundle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="60%" stop-color="#000000" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+    <linearGradient id="spineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.25)" />
+      <stop offset="30%" stop-color="rgba(0,0,0,0.6)" />
+      <stop offset="85%" stop-color="rgba(0,0,0,0.1)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0.05)" />
+    </linearGradient>
+    <linearGradient id="goldText" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#ffffff" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="15" stdDeviation="25" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Book Base Background -->
+  <rect x="0" y="0" width="600" height="850" rx="12" fill="url(#bg-zerototenk-all-access-empire-bundle)" />
+  
+  <!-- Subtle Grid Texture -->
+  <g opacity="0.07" stroke="#ffffff" stroke-width="1">
+    <line x1="50" y1="0" x2="50" y2="850" />
+    <line x1="150" y1="0" x2="150" y2="850" />
+    <line x1="250" y1="0" x2="250" y2="850" />
+    <line x1="350" y1="0" x2="350" y2="850" />
+    <line x1="450" y1="0" x2="450" y2="850" />
+    <line x1="550" y1="0" x2="550" y2="850" />
+    <line x1="0" y1="100" x2="600" y2="100" />
+    <line x1="0" y1="200" x2="600" y2="200" />
+    <line x1="0" y1="350" x2="600" y2="350" />
+    <line x1="0" y1="500" x2="600" y2="500" />
+    <line x1="0" y1="650" x2="600" y2="650" />
+    <line x1="0" y1="750" x2="600" y2="750" />
+  </g>
+
+  <!-- Ambient Glow Center -->
+  <circle cx="380" cy="380" r="260" fill="#f59e0b" opacity="0.18" />
+
+  <!-- Realistic Book Spine Crease -->
+  <rect x="0" y="0" width="38" height="850" fill="url(#spineGrad)" />
+  <line x1="38" y1="0" x2="38" y2="850" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+  <line x1="42" y1="0" x2="42" y2="850" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" />
+
+  <!-- Top Brand Seal -->
+  <g transform="translate(65, 55)">
+    <rect x="0" y="0" width="170" height="28" rx="6" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    <text x="85" y="19" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="800" fill="#ffffff" letter-spacing="2" text-anchor="middle">ZEROTOTENK.IN</text>
+  </g>
+
+  <!-- Category Tag -->
+  <g transform="translate(65, 105)">
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="900" fill="#f59e0b" letter-spacing="3">ULTIMATE COMPILATION</text>
+  </g>
+
+  <!-- Gold Star Rating Badge -->
+  <g transform="translate(420, 52)">
+    <rect x="0" y="0" width="125" height="32" rx="8" fill="rgba(0,0,0,0.5)" stroke="#fbbf24" stroke-width="1.5"/>
+    <text x="62" y="21" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#fbbf24" letter-spacing="1" text-anchor="middle">★ 4.97 RATED</text>
+  </g>
+
+  <!-- Center Decorative Emblem -->
+  <g transform="translate(320, 260)" opacity="0.85">
+    <circle cx="0" cy="0" r="70" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="8 6" />
+    <circle cx="0" cy="0" r="55" fill="rgba(0,0,0,0.4)" stroke="#fbbf24" stroke-width="1.5" />
+    <text x="0" y="8" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="900" fill="#fbbf24" text-anchor="middle">₹10K</text>
+  </g>
+
+  <!-- Main Title Block -->
+  <g transform="translate(65, 390)">
+    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">THE ZEROTOTENK</text>
+    <text x="0" y="55" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">EMPIRE BUNDLE</text>
+    <text x="0" y="102" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="32" font-weight="900" fill="#ffffff" letter-spacing="2">ALL-ACCESS VAULT</text>
+  </g>
+
+  <!-- Golden Divider -->
+  <line x1="65" y1="520" x2="220" y2="520" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Descriptor Paragraph -->
+  <g transform="translate(65, 555)">
+    <foreignObject width="470" height="110">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.5; color: #cbd5e1; font-weight: 500;">
+        All 11 Master eBooks + 50 Notion Workbooks + 250 Graphics + VIP Community Access
+      </div>
+    </foreignObject>
+  </g>
+
+  <!-- Highlight Feature Pill -->
+  <g transform="translate(65, 680)">
+    <rect x="0" y="0" width="220" height="34" rx="17" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+    <text x="110" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#f8fafc" letter-spacing="1" text-anchor="middle">✔ ★ ALL-IN-ONE BUNDLE ★</text>
+  </g>
+  <g transform="translate(300, 680)">
+    <rect x="0" y="0" width="235" height="34" rx="17" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+    <text x="117" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="700" fill="#f8fafc" letter-spacing="1" text-anchor="middle">⚡ INSTANT PDF + EPUB</text>
+  </g>
+
+  <!-- Footer Author Stamp -->
+  <g transform="translate(65, 785)">
+    <line x1="0" y1="-25" x2="475" y2="-25" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#94a3b8" letter-spacing="2">AUTHOR / PUBLISHER</text>
+    <text x="0" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="900" fill="#ffffff" letter-spacing="0.5">ZEROTOTENK CREATOR LABS &amp; FOUNDERS</text>
+    
+    <text x="475" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#fbbf24" letter-spacing="1" text-anchor="end">LIFETIME ACCESS PASS</text>
+  </g>
+
+  <!-- Top Right Book Corner Fold Illusion -->
+  <polygon points="575,0 600,0 600,25" fill="rgba(255,255,255,0.08)" />
+</svg>

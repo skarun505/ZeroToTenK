@@ -1,0 +1,1 @@
+DELETE FROM crackers."Product" WHERE "category" IN ('smartphones', 'laptops', 'televisions', 'appliances') OR "title" LIKE '%iPhone%' OR "title" LIKE '%MacBook%' OR "title" LIKE '%Samsung%';

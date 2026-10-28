@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  brand          String   @default("ZeroToTenK Publishing")
+  modelNumber    String   @default("DIGITAL_EDITION")
+  category       String
+  description    String
+  images         String   @default("[]")
+  mrp            Int
+  warrantyMonths Int      @default(12)
+  returnDays     Int      @default(7)
+  units          Unit[]
+  reviews        Review[]
+  createdAt      DateTime @default(now())
+}
+
+model Unit {
+  id            String    @id @default(cuid())
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serialOrImei  String    @unique
+  grade         String    @default("DIGITAL_MASTER")
+  source        String    @default("INSTANT_DOWNLOAD")
+  costPaise     Int       @default(0)
+  repairNotes   String?
+  repairPhotos  String?
+  batteryHealth Int?
+  pricePaise    Int
+  floorPaise    Int
+  status        String    @default("AVAILABLE")
+  reservedUntil DateTime?
+  order         Order?
+  createdAt     DateTime  @default(now())
+}
+
+model Order {
+  id             String    @id @default(cuid())
+  userId         String    @default("guest")
+  unitId         String    @unique
+  unit           Unit      @relation(fields: [unitId], references: [id])
+  amountPaise    Int
+  couponCode     String?
+  discountPaise  Int       @default(0)
+  status         String    @default("AWAITING_PAYMENT")
+  paymentMode    String    @default("MANUAL_UPI")
+  rzpOrderId     String?   @unique
+  rzpPaymentId   String?
+  utr            String?   @unique
+  utrSubmittedAt DateTime?
+  payerName      String?
+  screenshotUrl  String?
+  verifiedBy     String?
+  verifiedAt     DateTime?
+  rejectReason   String?
+  shippingJson   String
+  invoiceNo      String?   @unique
+  createdAt      DateTime  @default(now())
+}
+
+model Coupon {
+  code       String  @id
+  percentOff Int
+  maxUses    Int     @default(1000)
+  used       Int     @default(0)
+  active     Boolean @default(true)
+}
+
+model Review {
+  id               String   @id @default(cuid())
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userName         String
+  rating           Int      @default(5)
+  comment          String
+  verifiedPurchase Boolean  @default(true)
+  createdAt        DateTime @default(now())
+}
