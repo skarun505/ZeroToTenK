@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
@@ -28,8 +29,23 @@ export default async function FlashSalePage() {
       orderBy: { createdAt: "desc" },
     });
   } catch (err) {
-    console.warn("Flash sale product fetch error during build:", err);
-    products = [];
+    console.warn("Prisma flash sale fetch failed, falling back to Supabase:", err);
+    try {
+      const { data } = await supabase
+        .from("Product")
+        .select("*, units:Unit(*)")
+        .order("createdAt", { ascending: false });
+      if (data) {
+        products = data.map((p: any) => ({
+          ...p,
+          units: (p.units || [])
+            .filter((u: any) => u.status === "AVAILABLE")
+            .sort((a: any, b: any) => (a.pricePaise || 0) - (b.pricePaise || 0)),
+        }));
+      }
+    } catch (fallbackErr) {
+      console.error("Supabase flash sale fallback error:", fallbackErr);
+    }
   }
 
   return (

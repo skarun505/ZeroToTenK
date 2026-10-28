@@ -2,6 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { ProductCard } from "@/components/ProductCard";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -67,7 +68,24 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       orderBy: { createdAt: "desc" },
     });
   } catch (err) {
-    console.error("Failed to load category products:", err);
+    console.error("Prisma category load failed, falling back to Supabase:", err);
+    try {
+      const { data } = await supabase
+        .from("Product")
+        .select("*, units:Unit(*)")
+        .eq("category", params.slug)
+        .order("createdAt", { ascending: false });
+      if (data) {
+        products = data.map((p: any) => ({
+          ...p,
+          units: (p.units || [])
+            .filter((u: any) => u.status === "AVAILABLE")
+            .sort((a: any, b: any) => (a.pricePaise || 0) - (b.pricePaise || 0)),
+        }));
+      }
+    } catch (fallbackErr) {
+      console.error("Supabase category fallback error:", fallbackErr);
+    }
   }
 
   return (

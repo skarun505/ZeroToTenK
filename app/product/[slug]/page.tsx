@@ -12,6 +12,8 @@ interface ProductPageProps {
   };
 }
 
+import { supabase } from "@/lib/supabase";
+
 // Cached product fetcher shared between generateMetadata and ProductPage
 const getProduct = cache(async (slug: string) => {
   try {
@@ -27,7 +29,25 @@ const getProduct = cache(async (slug: string) => {
       },
     });
   } catch (err) {
-    console.warn("Product fetch error:", err);
+    console.warn("Prisma product fetch error, falling back to Supabase:", err);
+    try {
+      const { data } = await supabase
+        .from("Product")
+        .select("*, units:Unit(*), reviews:Review(*)")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (data) {
+        if (data.units) {
+          data.units.sort((a: any, b: any) => (a.pricePaise || 0) - (b.pricePaise || 0));
+        }
+        if (data.reviews) {
+          data.reviews.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+        return data;
+      }
+    } catch (fallbackErr) {
+      console.error("Supabase getProduct fallback error:", fallbackErr);
+    }
     return null;
   }
 });
@@ -73,7 +93,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const minPrice =
     product.units.length > 0
-      ? Math.min(...product.units.map((u) => u.pricePaise)) / 100
+      ? Math.min(...product.units.map((u: any) => u.pricePaise)) / 100
       : product.mrp / 100;
 
   const jsonLd = {
@@ -93,7 +113,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       priceCurrency: "INR",
       lowPrice: minPrice,
       offerCount: product.units.length,
-      availability: product.units.some((u) => u.status === "AVAILABLE")
+      availability: product.units.some((u: any) => u.status === "AVAILABLE")
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
     },

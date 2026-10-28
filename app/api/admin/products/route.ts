@@ -11,13 +11,13 @@ function hasRealImage(p: any): boolean {
   return !(
     !first ||
     first.includes("no_preview") ||
-    first.includes("placeholder") ||
-    first.includes(".svg")
+    first.includes("placeholder")
   );
 }
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   try {
@@ -45,6 +45,26 @@ export async function GET() {
 
     return NextResponse.json({ ok: true, products });
   } catch (err: any) {
+    console.warn("Prisma fetch failed, falling back to Supabase REST client:", err?.message);
+    try {
+      const { data, error } = await supabase
+        .from("Product")
+        .select("*, units:Unit(*), reviews:Review(*)")
+        .order("createdAt", { ascending: false });
+
+      if (data && data.length > 0) {
+        const formatted = data.map((p: any) => ({
+          ...p,
+          _count: {
+            units: p.units?.length || 0,
+            reviews: p.reviews?.length || 0,
+          },
+        }));
+        return NextResponse.json({ ok: true, products: formatted });
+      }
+    } catch (fallbackErr) {
+      console.error("Supabase fallback fetch error:", fallbackErr);
+    }
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

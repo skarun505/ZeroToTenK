@@ -27,17 +27,39 @@ interface OrderPageProps {
   };
 }
 
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
+
 export default async function OrderPage({ params, searchParams }: OrderPageProps) {
-  const order = await prisma.order.findUnique({
-    where: { id: params.id },
-    include: {
-      unit: {
-        include: {
-          product: true,
+  let order: any = null;
+  try {
+    order = await prisma.order.findUnique({
+      where: { id: params.id },
+      include: {
+        unit: {
+          include: {
+            product: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.warn("Prisma order fetch failed, falling back to Supabase:", err);
+  }
+
+  if (!order) {
+    try {
+      const { data } = await supabase
+        .from("Order")
+        .select("*, unit:Unit(*, product:Product(*))")
+        .eq("id", params.id)
+        .maybeSingle();
+      order = data;
+    } catch (fallbackErr) {
+      console.error("Supabase order fallback error:", fallbackErr);
+    }
+  }
 
   if (!order) {
     notFound();

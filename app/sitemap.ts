@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://zerototenk.in";
@@ -31,7 +32,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
   } catch (err) {
-    console.warn("Sitemap: Skipping dynamic products during build:", err);
+    try {
+      const { data } = await supabase.from("Product").select("slug, createdAt");
+      if (data) {
+        productRoutes = data.map((p: any) => ({
+          url: `${baseUrl}/product/${p.slug}`,
+          lastModified: new Date(p.createdAt),
+          changeFrequency: "weekly",
+          priority: 0.7,
+        }));
+      }
+    } catch {}
   }
 
   return [...staticRoutes, ...productRoutes];
