@@ -72,6 +72,17 @@ export function ProductDetailClient({ product }: ProductDetailProps) {
     images = [];
   }
   const [activeImage, setActiveImage] = useState(images[0] || `/images/books/${product.slug}.svg`);
+  const [hasError, setHasError] = useState(false);
+
+  const handleImageError = () => {
+    if (activeImage.includes("/images/books/")) {
+      setActiveImage(`/covers/${product.slug}.svg`);
+    } else if (activeImage.includes("/covers/")) {
+      setActiveImage(`/books/${product.slug}.svg`);
+    } else {
+      setHasError(true);
+    }
+  };
 
   const availableUnits = product.units.filter((u) => {
     if (u.status === "AVAILABLE") return true;
@@ -98,15 +109,37 @@ export function ProductDetailClient({ product }: ProductDetailProps) {
         {/* Left Column: Book Cover Presentation */}
         <div className="space-y-4">
           <div className="relative aspect-[3/4] max-w-md mx-auto rounded-3xl bg-[#090d16] border border-slate-800 overflow-hidden shadow-2xl p-6 flex items-center justify-center group hover:border-emerald-500/50 transition-colors">
-            <Image
-              src={activeImage}
-              alt={product.title}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover p-2 group-hover:scale-102 transition-transform duration-300"
-              unoptimized={true}
-            />
+            {!hasError ? (
+              <Image
+                src={activeImage}
+                alt={product.title}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover p-2 group-hover:scale-102 transition-transform duration-300"
+                unoptimized={true}
+                onError={handleImageError}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950 p-6 flex flex-col justify-between select-none">
+                <div className="space-y-1">
+                  <span className="text-xs font-black uppercase tracking-widest text-emerald-400">ZEROTOTENK.IN</span>
+                  <div className="text-sm font-bold text-amber-300">★ 4.97 RATED EDITION</div>
+                </div>
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-lg font-black text-white leading-snug">
+                    {product.title}
+                  </h2>
+                </div>
+                <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-medium">
+                  <span>PDF + ePub + Notion</span>
+                  <span className="text-emerald-400 font-bold">Instant Access</span>
+                </div>
+              </div>
+            )}
 
             {/* Floating Badges */}
             <div className="absolute top-4 left-4 px-3 py-1 rounded-lg bg-rose-600 text-white text-xs font-black uppercase tracking-wider shadow-md">

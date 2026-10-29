@@ -34,10 +34,22 @@ export function ProductCard({ product }: ProductCardProps) {
   }
   const initialImage = images[0] || `/images/books/${product.slug}.svg`;
   const [imgSrc, setImgSrc] = React.useState(initialImage);
+  const [hasError, setHasError] = React.useState(false);
 
   React.useEffect(() => {
     setImgSrc(images[0] || `/images/books/${product.slug}.svg`);
+    setHasError(false);
   }, [product.images, product.slug]);
+
+  const handleImageError = () => {
+    if (imgSrc.includes("/images/books/")) {
+      setImgSrc(`/covers/${product.slug}.svg`);
+    } else if (imgSrc.includes("/covers/")) {
+      setImgSrc(`/books/${product.slug}.svg`);
+    } else {
+      setHasError(true);
+    }
+  };
 
   const availableUnits = product.units?.filter((u) => u.status === "AVAILABLE") || [];
   const minPrice = availableUnits.length > 0
@@ -68,19 +80,36 @@ export function ProductCard({ product }: ProductCardProps) {
     <div className="book-card rounded-2xl overflow-hidden flex flex-col justify-between group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/70 shadow-md hover:shadow-emerald-500/10 dark:hover:shadow-emerald-950/40 transition-all duration-300">
       {/* Book Cover Container */}
       <Link href={`/product/${product.slug}`} className="block relative aspect-[3/4] bg-slate-950 overflow-hidden border-b border-slate-200 dark:border-slate-800">
-        <Image
-          src={imgSrc}
-          alt={product.title}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          unoptimized={true}
-          onError={() => {
-            if (imgSrc !== `/covers/${product.slug}.svg`) {
-              setImgSrc(`/covers/${product.slug}.svg`);
-            }
-          }}
-        />
+        {!hasError ? (
+          <Image
+            src={imgSrc}
+            alt={product.title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            unoptimized={true}
+            onError={handleImageError}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-emerald-950 p-5 flex flex-col justify-between select-none">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">ZEROTOTENK.IN</span>
+              <div className="text-xs font-bold text-amber-300">★ 4.97 RATED</div>
+            </div>
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <p className="text-sm font-black text-white leading-tight line-clamp-3">
+                {product.title}
+              </p>
+            </div>
+            <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span>PDF + ePub</span>
+              <span className="text-emerald-400 font-bold">Instant Access</span>
+            </div>
+          </div>
+        )}
 
         {/* Discount Badge */}
         <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-md bg-rose-600 text-white text-[10.5px] font-black uppercase tracking-wider shadow-md">

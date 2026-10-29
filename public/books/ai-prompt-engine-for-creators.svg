@@ -111,9 +111,9 @@
 
   <!-- Main Title Block (Pure SVG Typography) -->
   <g transform="translate(68, 385)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">AI PROMPT ENGINE</text>
-    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">FOR 10X CREATORS</text>
-    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">EXPEDITION</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">THE 10X AI PROMPT</text>
+    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">ENGINEERING BIBLE</text>
+    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">850+ TESTED PROMPTS</text>
   </g>
 
   <!-- Golden Accent Divider Line -->
@@ -122,9 +122,11 @@
   <!-- Pure SVG Descriptor Paragraph (Guaranteed browser and mobile compatibility) -->
   <g transform="translate(68, 545)">
     
-      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">850+ Rigorously Tested Prompts for</text>
+      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Production-Grade Prompts for ChatGPT,</text>
     
-      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Outlining, Drafting &amp; Scaling Ebooks</text>
+      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Claude &amp; Midjourney to Scale Content</text>
+    
+      <text x="0" y="52" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">10x</text>
     
   </g>
 
@@ -147,7 +149,7 @@
     <text x="0" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="13.5" font-weight="900" fill="#ffffff" letter-spacing="0.5">ZEROTOTENK CREATOR LABS</text>
     
     <!-- Edition Tag on Right -->
-    <text x="480" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="900" fill="#7dd3fc" letter-spacing="1" text-anchor="end">TESTED ON CLAUDE &amp; CHATGPT</text>
+    <text x="480" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="900" fill="#7dd3fc" letter-spacing="1" text-anchor="end">TESTED ON CLAUDE 3.5 &amp; GPT-4o</text>
     
     <!-- Mini Vector Barcode -->
     <g transform="translate(400, 10)" opacity="0.65">

@@ -106,9 +106,9 @@
 
   <!-- Main Title Block (Pure SVG Typography) -->
   <g transform="translate(68, 385)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">THE ZEROTOTENK</text>
-    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">EMPIRE BUNDLE</text>
-    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">ALL-ACCESS VAULT</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">CREATOR ECONOMY</text>
+    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">MEGA VAULT</text>
+    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">ALL-ACCESS DIGITAL PASS</text>
   </g>
 
   <!-- Golden Accent Divider Line -->
@@ -117,11 +117,11 @@
   <!-- Pure SVG Descriptor Paragraph (Guaranteed browser and mobile compatibility) -->
   <g transform="translate(68, 545)">
     
-      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">All 11 Master eBooks + 50 Notion</text>
+      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">All 11 Master Bestsellers + 50 Notion</text>
     
-      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Workbooks + 250 Graphics + VIP</text>
+      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Workspaces + 250 Graphics + VIP</text>
     
-      <text x="0" y="52" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Community Access</text>
+      <text x="0" y="52" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Community</text>
     
   </g>
 
@@ -144,7 +144,7 @@
     <text x="0" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="13.5" font-weight="900" fill="#ffffff" letter-spacing="0.5">ZEROTOTENK CREATOR LABS</text>
     
     <!-- Edition Tag on Right -->
-    <text x="480" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="900" fill="#fbbf24" letter-spacing="1" text-anchor="end">LIFETIME ACCESS PASS</text>
+    <text x="480" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="900" fill="#fbbf24" letter-spacing="1" text-anchor="end">LIFETIME ALL-ACCESS PASS</text>
     
     <!-- Mini Vector Barcode -->
     <g transform="translate(400, 10)" opacity="0.65">

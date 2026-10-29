@@ -80,7 +80,7 @@
 
   <!-- Category Tag Line -->
   <g transform="translate(68, 114)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="#e4e4e7" letter-spacing="3.5">CAREER ARCHITECTURE</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="#e4e4e7" letter-spacing="3.5">FREEDOM ARCHITECTURE</text>
   </g>
 
   <!-- Center Decorative Emblem with Dynamic Icon -->
@@ -106,9 +106,9 @@
 
   <!-- Main Title Block (Pure SVG Typography) -->
   <g transform="translate(68, 385)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">FREELANCER TO</text>
-    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">INFO-PUBLISHER</text>
-    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">TRANSITION</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">THE SOLOPRENEUR</text>
+    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">OPERATING SYSTEM</text>
+    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">BUILD ONCE, SELL FOREVER</text>
   </g>
 
   <!-- Golden Accent Divider Line -->
@@ -117,11 +117,11 @@
   <!-- Pure SVG Descriptor Paragraph (Guaranteed browser and mobile compatibility) -->
   <g transform="translate(68, 545)">
     
-      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Escape The Client Trap: Package Your</text>
+      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Package Your Skills Into Self-Selling</text>
     
-      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Skills Into Self-Selling Digital</text>
+      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Digital Assets &amp; Escape Client</text>
     
-      <text x="0" y="52" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Assets</text>
+      <text x="0" y="52" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Retainers</text>
     
   </g>
 

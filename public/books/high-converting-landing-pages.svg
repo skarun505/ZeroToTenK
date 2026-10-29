@@ -113,7 +113,7 @@
   <g transform="translate(68, 385)">
     <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">HIGH-CONVERTING</text>
     <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">LANDING PAGES</text>
-    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">FOR DIGITAL PRODUCTS</text>
+    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">PSYCHOLOGY &amp; LAYOUTS</text>
   </g>
 
   <!-- Golden Accent Divider Line -->
@@ -122,16 +122,16 @@
   <!-- Pure SVG Descriptor Paragraph (Guaranteed browser and mobile compatibility) -->
   <g transform="translate(68, 545)">
     
-      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Copywriting, Layouts &amp; Psychology That</text>
+      <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">The Layout Anatomy &amp; Triggers That</text>
     
-      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Turn 12%+ Mobile Visitors into Buyers</text>
+      <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Turn 14%+ Mobile Traffic into Buyers</text>
     
   </g>
 
   <!-- Feature Value Pills -->
   <g transform="translate(68, 665)">
     <rect x="0" y="0" width="225" height="34" rx="17" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
-    <text x="112" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#f8fafc" letter-spacing="1" text-anchor="middle">✔ 12.4% AVG CONVERSION</text>
+    <text x="112" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#f8fafc" letter-spacing="1" text-anchor="middle">✔ 14.2% AVG CONVERSION</text>
   </g>
   <g transform="translate(305, 665)">
     <rect x="0" y="0" width="235" height="34" rx="17" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
