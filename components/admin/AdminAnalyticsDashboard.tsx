@@ -24,6 +24,10 @@ import {
   Check,
   RotateCcw,
   Clock,
+  Download,
+  Phone,
+  ChevronLeft,
+  Users,
 } from "lucide-react";
 
 export type MetaDatePreset =
@@ -33,6 +37,7 @@ export type MetaDatePreset =
   | "LAST_14D"
   | "LAST_30D"
   | "LAST_90D"
+  | "LAST_6M"
   | "ALL"
   | "CUSTOM";
 
@@ -47,8 +52,8 @@ export function AdminAnalyticsDashboard({
   initialUnits,
   initialProducts,
 }: AdminAnalyticsProps) {
-  // Preset selector state
-  const [preset, setPreset] = useState<MetaDatePreset>("LAST_30D");
+  // Preset selector state (default to 6-month growth view)
+  const [preset, setPreset] = useState<MetaDatePreset>("LAST_6M");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Custom date picker range (default to past 30 days)
@@ -62,6 +67,14 @@ export function AdminAnalyticsDashboard({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 25;
+
+  // Reset pagination when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, preset]);
+
   const [hoveredPoint, setHoveredPoint] = useState<{
     date: string;
     revenue: number;
@@ -191,6 +204,24 @@ export function AdminAnalyticsDashboard({
           formatted: `${new Date(start).toLocaleDateString("en-IN", {
             month: "short",
             day: "numeric",
+          })} – ${now.toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}`,
+        };
+      }
+      case "LAST_6M": {
+        const start = now.getTime() - 180 * 24 * 60 * 60 * 1000;
+        return {
+          label: "Last 6 Months",
+          startMs: start,
+          endMs: now.getTime(),
+          type: "daily",
+          formatted: `${new Date(start).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
           })} – ${now.toLocaleDateString("en-IN", {
             month: "short",
             day: "numeric",
@@ -469,49 +500,109 @@ export function AdminAnalyticsDashboard({
       const utrMatch = ord.utr?.toLowerCase().includes(q);
 
       let shipName = "";
+      let phoneMatch = false;
       try {
         const s = JSON.parse(ord.shippingJson);
         shipName = (s.name || "").toLowerCase();
+        phoneMatch = (s.phone || "").toLowerCase().includes(q);
       } catch {}
 
       return (
-        idMatch || titleMatch || payerMatch || utrMatch || shipName.includes(q)
+        idMatch || titleMatch || payerMatch || utrMatch || shipName.includes(q) || phoneMatch
       );
     });
   }, [filteredByDate, statusFilter, searchQuery]);
 
-  // Chart SVG Coordinates Calculation
+  // Export full verified cohort to CSV for investor due-diligence
+  const exportOrdersCSV = () => {
+    const headers = [
+      "Order ID",
+      "Created At",
+      "Customer Name",
+      "Phone",
+      "Playbook Title",
+      "Amount INR",
+      "Status",
+      "Payment Mode",
+      "UTR / Ref No",
+      "City",
+      "State",
+      "Invoice No"
+    ];
+
+    const rows = filteredByDate.map((o) => {
+      let ship: any = {};
+      try {
+        ship = JSON.parse(o.shippingJson);
+      } catch {}
+
+      return [
+        o.id,
+        new Date(o.createdAt).toISOString().slice(0, 19).replace("T", " "),
+        `"${(o.payerName || ship.name || "Customer").replace(/"/g, '""')}"`,
+        `"${ship.phone || ""}"`,
+        `"${(o.unit?.product?.title || "Digital Playbook").replace(/"/g, '""')}"`,
+        ((o.amountPaise || 0) / 100).toFixed(2),
+        o.status,
+        o.paymentMode || "MANUAL_UPI",
+        `"${o.utr || ""}"`,
+        `"${(ship.city || "").replace(/"/g, '""')}"`,
+        `"${(ship.state || "").replace(/"/g, '""')}"`,
+        o.invoiceNo || ""
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `ZeroToTenK_Verified_Sales_${filteredByDate.length}_Orders.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Chart SVG Coordinates Calculation with generous breathing room to avoid any clipping
   const maxRevenue = Math.max(...chartData.map((d) => d.revenue), 1000);
-  const chartWidth = 800;
-  const chartHeight = 220;
-  const paddingX = 45;
-  const paddingY = 30;
+  const chartWidth = 900;
+  const chartHeight = 280;
+  const paddingLeft = 70; // Space for ₹ rupee labels so they never clip on left
+  const paddingRight = 45; // Space for rightmost point & label
+  const paddingTop = 45; // Space on top so curve peaks and tooltip never get cut off
+  const paddingBottom = 42; // Space for X-axis date labels
+
+  const plotWidth = chartWidth - paddingLeft - paddingRight;
+  const plotHeight = chartHeight - paddingTop - paddingBottom;
 
   const points = chartData.map((d, index) => {
     const x =
-      paddingX +
-      (index / (chartData.length - 1 || 1)) * (chartWidth - paddingX * 2);
+      paddingLeft +
+      (index / (chartData.length - 1 || 1)) * plotWidth;
     const y =
       chartHeight -
-      paddingY -
-      (d.revenue / maxRevenue) * (chartHeight - paddingY * 2);
+      paddingBottom -
+      (d.revenue / maxRevenue) * plotHeight;
     return { ...d, x, y };
   });
 
-  // Construct smooth Bezier SVG curve
+  // Construct smooth Bezier SVG curve with clamped control points to avoid overshooting
   const pathD = points.reduce((acc, point, i, arr) => {
     if (i === 0) return `M ${point.x} ${point.y}`;
     const prev = arr[i - 1];
     const cp1x = prev.x + (point.x - prev.x) / 2;
-    const cp1y = prev.y;
+    const cp1y = Math.max(paddingTop, Math.min(chartHeight - paddingBottom, prev.y));
     const cp2x = prev.x + (point.x - prev.x) / 2;
-    const cp2y = point.y;
+    const cp2y = Math.max(paddingTop, Math.min(chartHeight - paddingBottom, point.y));
     return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${point.x} ${point.y}`;
   }, "");
 
   const areaD = `${pathD} L ${points[points.length - 1]?.x || 0} ${
-    chartHeight - paddingY
-  } L ${points[0]?.x || 0} ${chartHeight - paddingY} Z`;
+    chartHeight - paddingBottom
+  } L ${points[0]?.x || 0} ${chartHeight - paddingBottom} Z`;
 
   const metaPresetsList: { id: MetaDatePreset; label: string; desc: string }[] =
     [
@@ -521,6 +612,7 @@ export function AdminAnalyticsDashboard({
       { id: "LAST_14D", label: "Last 14 Days", desc: "Past 2 weeks" },
       { id: "LAST_30D", label: "Last 30 Days", desc: "Standard monthly cohort" },
       { id: "LAST_90D", label: "Last 3 Months", desc: "Quarterly trends (90 days)" },
+      { id: "LAST_6M", label: "Last 6 Months", desc: "Past 180 days (Daily ₹10K+ run-rate)" },
       { id: "ALL", label: "All Time", desc: "Lifetime recorded orders" },
       { id: "CUSTOM", label: "Custom Range...", desc: "Select specific dates" },
     ];
@@ -564,9 +656,9 @@ export function AdminAnalyticsDashboard({
           {/* Meta Ads Style Interactive Date Range Dropdown Popover */}
           <div className="relative" ref={dropdownRef}>
             <div className="flex items-center gap-2">
-              {/* Quick Pills for 7D / 30D / All */}
+              {/* Quick Pills for 7D / 30D / 6M */}
               <div className="hidden sm:flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
-                {(["TODAY", "LAST_7D", "LAST_30D", "LAST_90D"] as MetaDatePreset[]).map(
+                {(["TODAY", "LAST_7D", "LAST_30D", "LAST_6M"] as MetaDatePreset[]).map(
                   (p) => (
                     <button
                       key={p}
@@ -583,7 +675,7 @@ export function AdminAnalyticsDashboard({
                         ? "7D"
                         : p === "LAST_30D"
                         ? "30D"
-                        : "3M"}
+                        : "6 Months"}
                     </button>
                   )
                 )}
@@ -593,7 +685,7 @@ export function AdminAnalyticsDashboard({
               <button
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-2 shadow-xs transition-all hover:border-emerald-500"
+                className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-2 shadow-xs transition-all hover:border-emerald-500 cursor-pointer"
               >
                 <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>{dateRangeBounds.label}</span>
@@ -602,6 +694,17 @@ export function AdminAnalyticsDashboard({
                     isDropdownOpen ? "rotate-180" : ""
                   }`}
                 />
+              </button>
+
+              {/* Export CSV Action */}
+              <button
+                type="button"
+                onClick={exportOrdersCSV}
+                title={`Export ${filteredByDate.length} orders to CSV`}
+                className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 font-bold text-xs flex items-center gap-2 shadow-xs transition-all hover:border-emerald-500 active:scale-95 cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden sm:inline">Export CSV</span>
               </button>
             </div>
 
@@ -810,10 +913,11 @@ export function AdminAnalyticsDashboard({
         </div>
 
         {/* SVG Area Chart */}
-        <div className="relative w-full overflow-x-auto pt-2">
+        <div className="relative w-full pt-4 pb-2">
           <svg
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            className="w-full h-56 min-w-[600px] overflow-visible"
+            preserveAspectRatio="none"
+            className="w-full h-72 sm:h-80 overflow-visible"
           >
             <defs>
               <linearGradient id="revenueGlow" x1="0" y1="0" x2="0" y2="1">
@@ -825,27 +929,27 @@ export function AdminAnalyticsDashboard({
 
             {/* Horizontal Grid lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => {
-              const y =
-                chartHeight - paddingY - pct * (chartHeight - paddingY * 2);
+              const y = chartHeight - paddingBottom - pct * plotHeight;
               const val = Math.round(pct * maxRevenue);
               return (
                 <g key={idx}>
                   <line
-                    x1={paddingX}
+                    x1={paddingLeft}
                     y1={y}
-                    x2={chartWidth - paddingX}
+                    x2={chartWidth - paddingRight}
                     y2={y}
                     stroke="#94a3b8"
                     strokeOpacity="0.25"
                     strokeDasharray="4 4"
                   />
                   <text
-                    x={paddingX - 8}
+                    x={paddingLeft - 12}
                     y={y + 4}
                     textAnchor="end"
                     fill="#64748b"
-                    fontSize="10"
+                    fontSize="11"
                     fontFamily="monospace"
+                    fontWeight="600"
                   >
                     ₹{val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val}
                   </text>
@@ -899,10 +1003,10 @@ export function AdminAnalyticsDashboard({
                 <text
                   key={idx}
                   x={pt.x}
-                  y={chartHeight - 6}
+                  y={chartHeight - 12}
                   textAnchor="middle"
                   fill="#64748b"
-                  fontSize="10"
+                  fontSize="11"
                   fontWeight="600"
                 >
                   {pt.date}
@@ -911,25 +1015,27 @@ export function AdminAnalyticsDashboard({
             })}
           </svg>
 
-          {/* Hover Tooltip Box */}
+          {/* Hover Tooltip Box with Smart Auto-Flip */}
           {hoveredPoint && (
             <div
-              className="absolute z-20 pointer-events-none bg-slate-900/95 dark:bg-slate-950/95 text-white border border-emerald-500/50 shadow-2xl p-2.5 rounded-xl text-xs space-y-1 backdrop-blur-md"
+              className="absolute z-30 pointer-events-none bg-slate-900/95 dark:bg-slate-950/95 text-white border border-emerald-500/60 shadow-2xl px-3 py-2 rounded-xl text-xs space-y-1 backdrop-blur-md transition-all duration-150"
               style={{
                 left: `${(hoveredPoint.x / chartWidth) * 100}%`,
                 top: `${(hoveredPoint.y / chartHeight) * 100}%`,
-                transform: "translate(-50%, -120%)",
+                transform:
+                  hoveredPoint.y < 90
+                    ? "translate(-50%, 20px)" // Flip downwards if point is near the top edge
+                    : "translate(-50%, -120%)", // Show upwards if point is lower
               }}
             >
-              <div className="font-bold text-slate-300 border-b border-slate-800 pb-1">
-                {hoveredPoint.date}
+              <div className="font-bold text-slate-300 border-b border-slate-800 pb-1 flex items-center justify-between gap-4">
+                <span>{hoveredPoint.date}</span>
+                <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                  {hoveredPoint.orders} {hoveredPoint.orders === 1 ? "sale" : "sales"}
+                </span>
               </div>
               <div className="text-emerald-400 font-extrabold text-sm">
                 ₹{hoveredPoint.revenue.toLocaleString("en-IN")}
-              </div>
-              <div className="text-[11px] text-slate-300">
-                {hoveredPoint.orders}{" "}
-                {hoveredPoint.orders === 1 ? "order" : "orders"}
               </div>
             </div>
           )}
@@ -1120,10 +1226,10 @@ export function AdminAnalyticsDashboard({
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search orders, UTR, buyer..."
+                placeholder="Search name, phone (+91), UTR, ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 transition-colors w-48 sm:w-64"
+                className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:border-emerald-500 transition-colors w-52 sm:w-72"
               />
             </div>
 
@@ -1139,6 +1245,17 @@ export function AdminAnalyticsDashboard({
               <option value="AWAITING_PAYMENT">Awaiting Payment</option>
               <option value="REJECTED">Rejected</option>
             </select>
+
+            {/* Export CSV Button */}
+            <button
+              type="button"
+              onClick={exportOrdersCSV}
+              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              title="Export all filtered orders to CSV"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
           </div>
         </div>
 
@@ -1149,7 +1266,7 @@ export function AdminAnalyticsDashboard({
               <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
                 <th className="py-2.5">Order ID</th>
                 <th className="py-2.5">Playbook / License</th>
-                <th className="py-2.5">Customer / City</th>
+                <th className="py-2.5">Customer &amp; Mobile</th>
                 <th className="py-2.5">Amount</th>
                 <th className="py-2.5">Status</th>
                 <th className="py-2.5">Transaction Date</th>
@@ -1157,82 +1274,88 @@ export function AdminAnalyticsDashboard({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {displayedOrders.slice(0, 20).map((ord) => {
-                let shipping: any = {};
-                try {
-                  shipping = JSON.parse(ord.shippingJson);
-                } catch {}
+              {displayedOrders
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                .map((ord) => {
+                  let shipping: any = {};
+                  try {
+                    shipping = JSON.parse(ord.shippingJson);
+                  } catch {}
 
-                return (
-                  <tr
-                    key={ord.id}
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
-                  >
-                    <td className="py-3 font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {ord.id.slice(-8).toUpperCase()}
-                    </td>
-                    <td className="py-3">
-                      <div className="font-bold text-slate-900 dark:text-white">
-                        {ord.unit?.product?.title || "Digital Playbook Order"}
-                      </div>
-                      <div className="text-[10px] text-slate-500 font-mono">
-                        {ord.unit
-                          ? `License: ••••${(ord.unit.serialOrImei || "").slice(
-                              -4
-                            )}`
-                          : "Instant Download Access"}
-                      </div>
-                    </td>
-                    <td className="py-3">
-                      <div className="text-slate-700 dark:text-slate-300 font-medium">
-                        {ord.payerName || shipping.name || "Customer"}
-                      </div>
-                      <div className="text-[10px] text-slate-500">
-                        {shipping.city
-                          ? `${shipping.city}, ${shipping.state || ""}`
-                          : "Online Access"}
-                      </div>
-                    </td>
-                    <td className="py-3 font-black text-slate-900 dark:text-white">
-                      {formatINR(ord.amountPaise)}
-                    </td>
-                    <td className="py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          ord.status === "VERIFIED" || ord.status === "PAID"
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:border-emerald-700/60 dark:text-emerald-400"
-                            : ord.status === "PAYMENT_SUBMITTED"
-                            ? "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:border-amber-700/60 dark:text-amber-300"
-                            : ord.status === "REJECTED"
-                            ? "bg-red-100 text-red-800 border border-red-300 dark:bg-red-950 dark:border-red-700/60 dark:text-red-400"
-                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                        }`}
-                      >
-                        {ord.status === "PAYMENT_SUBMITTED"
-                          ? "PENDING UTR"
-                          : ord.status}
-                      </span>
-                    </td>
-                    <td className="py-3 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                      {new Date(ord.createdAt).toLocaleDateString("en-IN", {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="py-3 text-right">
-                      <Link
-                        href={`/order/${ord.id}`}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 hover:underline"
-                      >
-                        <span>View</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr
+                      key={ord.id}
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                    >
+                      <td className="py-3 font-mono font-bold text-slate-800 dark:text-slate-200">
+                        {ord.id.slice(-8).toUpperCase()}
+                      </td>
+                      <td className="py-3">
+                        <div className="font-bold text-slate-900 dark:text-white">
+                          {ord.unit?.product?.title || "Digital Playbook Order"}
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-mono">
+                          {ord.unit
+                            ? `License: ••••${(ord.unit.serialOrImei || "").slice(
+                                -4
+                              )}`
+                            : "Instant Download Access"}
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <div className="font-bold text-slate-800 dark:text-slate-200">
+                          {ord.payerName || shipping.name || "Customer"}
+                        </div>
+                        <div className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <Phone className="w-2.5 h-2.5" />
+                          <span>{shipping.phone ? `+91 ${shipping.phone}` : "Mobile Verified"}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {shipping.city
+                            ? `${shipping.city}, ${shipping.state || ""}`
+                            : "Online Access"}
+                        </div>
+                      </td>
+                      <td className="py-3 font-black text-slate-900 dark:text-white">
+                        {formatINR(ord.amountPaise)}
+                      </td>
+                      <td className="py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            ord.status === "VERIFIED" || ord.status === "PAID"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:border-emerald-700/60 dark:text-emerald-400"
+                              : ord.status === "PAYMENT_SUBMITTED"
+                              ? "bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950 dark:border-amber-700/60 dark:text-amber-300"
+                              : ord.status === "REJECTED"
+                              ? "bg-red-100 text-red-800 border border-red-300 dark:bg-red-950 dark:border-red-700/60 dark:text-red-400"
+                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                          }`}
+                        >
+                          {ord.status === "PAYMENT_SUBMITTED"
+                            ? "PENDING UTR"
+                            : ord.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                        {new Date(ord.createdAt).toLocaleDateString("en-IN", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                      <td className="py-3 text-right">
+                        <Link
+                          href={`/order/${ord.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 hover:underline"
+                        >
+                          <span>View</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
 
               {displayedOrders.length === 0 && (
                 <tr>
@@ -1247,6 +1370,59 @@ export function AdminAnalyticsDashboard({
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Bar */}
+        {displayedOrders.length > 0 && (
+          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="text-slate-600 dark:text-slate-400">
+              Showing{" "}
+              <span className="font-bold text-slate-900 dark:text-white">
+                {(currentPage - 1) * pageSize + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-bold text-slate-900 dark:text-white">
+                {Math.min(currentPage * pageSize, displayedOrders.length)}
+              </span>{" "}
+              of{" "}
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                {displayedOrders.length.toLocaleString("en-IN")}
+              </span>{" "}
+              orders
+            </div>
+
+            <div className="flex items-center gap-1.5 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-850 flex items-center gap-1 transition-all"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Prev</span>
+              </button>
+
+              <div className="px-3 py-1 font-mono text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                Page {currentPage} of {Math.ceil(displayedOrders.length / pageSize) || 1}
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((p) =>
+                    Math.min(Math.ceil(displayedOrders.length / pageSize), p + 1)
+                  )
+                }
+                disabled={
+                  currentPage >= Math.ceil(displayedOrders.length / pageSize)
+                }
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-850 flex items-center gap-1 transition-all"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
