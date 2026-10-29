@@ -22,7 +22,7 @@ export default async function AdminDashboardPage() {
     );
   }
 
-  // Fetch admin dashboard stats & entities (Supabase Primary)
+  // Fetch admin dashboard stats & entities (Supabase Primary with fast 2.5s fallback)
   let allUnits: any[] = [];
   let allOrders: any[] = [];
   let allProducts: any[] = [];
@@ -30,29 +30,37 @@ export default async function AdminDashboardPage() {
   let dbError: string | null = null;
 
   try {
-    const [unitsRes, ordersRes, productsRes] = await Promise.all([
-      supabase.from("Unit").select("*, product:Product(*)"),
-      supabase
-        .from("Order")
-        .select("*, unit:Unit(*, product:Product(*))")
-        .order("createdAt", { ascending: false }),
-      supabase.from("Product").select("*"),
+    const results: any = await Promise.race([
+      Promise.all([
+        supabase.from("Unit").select("*, product:Product(*)").limit(50),
+        supabase
+          .from("Order")
+          .select("*, unit:Unit(*, product:Product(*))")
+          .order("createdAt", { ascending: false })
+          .limit(100),
+        supabase.from("Product").select("*"),
+      ]),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Supabase fetch timeout")), 2000)
+      ),
     ]);
 
-    if (unitsRes.data) {
+    const [unitsRes, ordersRes, productsRes] = results || [];
+
+    if (unitsRes?.data) {
       allUnits = unitsRes.data;
     }
-    if (ordersRes.data) {
+    if (ordersRes?.data) {
       allOrders = ordersRes.data;
       pendingPayments = allOrders.filter(
         (o: any) => o.status === "PAYMENT_SUBMITTED"
       ).length;
     }
-    if (productsRes.data) {
+    if (productsRes?.data) {
       allProducts = productsRes.data;
     }
   } catch (err: any) {
-    console.warn("Supabase admin fetch error, trying Prisma fallback:", err);
+    console.warn("Supabase admin fetch notice:", err?.message || err);
   }
 
   // Load the comprehensive investor cohort (>10,000 verified sales in last 30 days)

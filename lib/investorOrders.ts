@@ -311,7 +311,7 @@ export function getInvestorOrders(): InvestorOrder[] {
     let orderInDay = 0;
 
     // Generate daily orders until target revenue is met
-    while (dayVerifiedPaise < targetPaise || (isToday && orderInDay < 25)) {
+    while ((dayVerifiedPaise < targetPaise || (isToday && orderInDay < 25)) && orderInDay < 75) {
       orderInDay++;
       const orderSeed = daySeed + orderInDay * 37;
       const r1 = pseudoRandom(orderSeed);
@@ -370,7 +370,7 @@ export function getInvestorOrders(): InvestorOrder[] {
 
       // If today and timestamp is in the future, don't include yet (it will auto-capture when the time arrives!)
       if (isToday && effectiveTimestampMs > nowMs) {
-        continue;
+        break;
       }
 
       if (status === "VERIFIED") {

@@ -16,10 +16,12 @@ import {
 } from "lucide-react";
 
 interface AdminOrdersFullViewProps {
-  initialOrders: any[];
+  initialOrders?: any[];
+  orders?: any[];
 }
 
-export function AdminOrdersFullView({ initialOrders }: AdminOrdersFullViewProps) {
+export function AdminOrdersFullView(props: AdminOrdersFullViewProps) {
+  const initialOrders = props.initialOrders || props.orders || [];
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);

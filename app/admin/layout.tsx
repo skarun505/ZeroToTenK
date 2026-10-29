@@ -16,13 +16,18 @@ export default async function AdminLayout({
   let pendingPaymentsCount = 0;
   if (isAuthenticated) {
     try {
-      const { count } = await supabase
-        .from("Order")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "PAYMENT_SUBMITTED");
-      pendingPaymentsCount = count || 0;
-    } catch (err) {
-      console.warn("Error fetching pending payments count for AdminHeader:", err);
+      const res: any = await Promise.race([
+        supabase
+          .from("Order")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "PAYMENT_SUBMITTED"),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 1500)
+        ),
+      ]);
+      pendingPaymentsCount = res?.count || 0;
+    } catch {
+      pendingPaymentsCount = 0;
     }
   }
 

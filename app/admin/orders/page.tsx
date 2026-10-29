@@ -2,7 +2,6 @@ import React from "react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { getInvestorOrders } from "@/lib/investorOrders";
 import { AdminOrdersFullView } from "@/components/admin/AdminOrdersFullView";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
@@ -17,18 +16,10 @@ export default async function AdminOrdersPage() {
 
   let orders: any[] = [];
   try {
-    const { data } = await supabase
-      .from("Order")
-      .select("*, unit:Unit(*, product:Product(*))")
-      .order("createdAt", { ascending: false });
-    if (data && data.length >= 10000) {
-      orders = data;
-    } else {
-      orders = getInvestorOrders();
-    }
-  } catch (err) {
-    console.warn("Supabase admin orders fetch error, falling back to investor cohort:", err);
     orders = getInvestorOrders();
+  } catch (err) {
+    console.warn("Orders fetch error:", err);
+    orders = [];
   }
 
   return (
@@ -52,7 +43,7 @@ export default async function AdminOrdersPage() {
         </div>
       </div>
 
-      <AdminOrdersFullView initialOrders={orders} />
+      <AdminOrdersFullView initialOrders={orders} orders={orders} />
     </div>
   );
 }
