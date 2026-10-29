@@ -283,9 +283,9 @@ export function FlashSaleClient({ initialProducts }: { initialProducts: ProductT
   const getProductImage = (p: ProductType) => {
     try {
       const imgs = JSON.parse(p.images);
-      return imgs[0] || "/logo.svg";
+      return imgs[0] || (p.slug ? `/images/books/${p.slug}.svg` : "/logo.svg");
     } catch {
-      return "/logo.svg";
+      return p.slug ? `/images/books/${p.slug}.svg` : "/logo.svg";
     }
   };
 

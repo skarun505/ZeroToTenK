@@ -32,7 +32,12 @@ export function ProductCard({ product }: ProductCardProps) {
   } catch {
     images = [];
   }
-  const mainImage = images[0] || `/images/books/${product.slug}.svg`;
+  const initialImage = images[0] || `/images/books/${product.slug}.svg`;
+  const [imgSrc, setImgSrc] = React.useState(initialImage);
+
+  React.useEffect(() => {
+    setImgSrc(images[0] || `/images/books/${product.slug}.svg`);
+  }, [product.images, product.slug]);
 
   const availableUnits = product.units?.filter((u) => u.status === "AVAILABLE") || [];
   const minPrice = availableUnits.length > 0
@@ -62,14 +67,19 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="book-card rounded-2xl overflow-hidden flex flex-col justify-between group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/70 shadow-md hover:shadow-emerald-500/10 dark:hover:shadow-emerald-950/40 transition-all duration-300">
       {/* Book Cover Container */}
-      <Link href={`/product/${product.slug}`} className="block relative aspect-[3/4] bg-slate-100 dark:bg-slate-950/80 overflow-hidden border-b border-slate-200 dark:border-slate-800">
+      <Link href={`/product/${product.slug}`} className="block relative aspect-[3/4] bg-slate-950 overflow-hidden border-b border-slate-200 dark:border-slate-800">
         <Image
-          src={mainImage}
+          src={imgSrc}
           alt={product.title}
           fill
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover group-hover:scale-105 transition-transform duration-300"
           unoptimized={true}
+          onError={() => {
+            if (imgSrc !== `/covers/${product.slug}.svg`) {
+              setImgSrc(`/covers/${product.slug}.svg`);
+            }
+          }}
         />
 
         {/* Discount Badge */}

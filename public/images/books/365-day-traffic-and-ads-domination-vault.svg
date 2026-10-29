@@ -80,7 +80,7 @@
 
   <!-- Category Tag Line -->
   <g transform="translate(68, 114)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="#ef4444" letter-spacing="3.5">PAID ADS & VIRAL GROWTH</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="#ef4444" letter-spacing="3.5">PAID ADS &amp; VIRAL GROWTH</text>
   </g>
 
   <!-- Center Decorative Emblem with Dynamic Icon -->
@@ -102,7 +102,7 @@
 
   <!-- Main Title Block (Pure SVG Typography) -->
   <g transform="translate(68, 385)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">365-DAY TRAFFIC &</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">365-DAY TRAFFIC &amp;</text>
     <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">PAID ADS VAULT</text>
     <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">OMNICHANNEL MASTERY</text>
   </g>
@@ -110,14 +110,14 @@
   <!-- Golden Accent Divider Line -->
   <line x1="68" y1="510" x2="240" y2="510" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" />
 
-  <!-- Pure SVG Descriptor Paragraph (Guaranteed browser & mobile compatibility) -->
+  <!-- Pure SVG Descriptor Paragraph (Guaranteed browser and mobile compatibility) -->
   <g transform="translate(68, 545)">
     
       <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Multi-Million Ad Spend Vault:</text>
     
       <text x="0" y="26" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">Plug-and-Play Meta/Google Campaigns,</text>
     
-      <text x="0" y="52" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">365 Days of Content & Swipe Files</text>
+      <text x="0" y="52" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">365 Days of Content &amp; Swipe Files</text>
     
   </g>
 
@@ -131,7 +131,7 @@
     <text x="117" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#f8fafc" letter-spacing="1" text-anchor="middle">⚡ INSTANT PDF + EPUB</text>
   </g>
 
-  <!-- Barcode & Publisher Footer Block -->
+  <!-- Barcode and Publisher Footer Block -->
   <g transform="translate(68, 770)">
     <line x1="0" y1="-20" x2="480" y2="-20" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
     

@@ -110,7 +110,7 @@
   <!-- Golden Accent Divider Line -->
   <line x1="68" y1="510" x2="240" y2="510" stroke="#f472b6" stroke-width="3.5" stroke-linecap="round" />
 
-  <!-- Pure SVG Descriptor Paragraph (Guaranteed browser & mobile compatibility) -->
+  <!-- Pure SVG Descriptor Paragraph (Guaranteed browser and mobile compatibility) -->
   <g transform="translate(68, 545)">
     
       <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">The Non-Pushy Daily Sequence That</text>
@@ -129,7 +129,7 @@
     <text x="117" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#f8fafc" letter-spacing="1" text-anchor="middle">⚡ INSTANT PDF + EPUB</text>
   </g>
 
-  <!-- Barcode & Publisher Footer Block -->
+  <!-- Barcode and Publisher Footer Block -->
   <g transform="translate(68, 770)">
     <line x1="0" y1="-20" x2="480" y2="-20" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
     

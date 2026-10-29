@@ -407,6 +407,16 @@ function renderVectorIcon(iconType, glowColor, goldColor) {
   }
 }
 
+function xmlEscape(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 function wrapText(text, maxChars = 40) {
   const words = text.split(' ');
   const lines = [];
@@ -510,7 +520,7 @@ export function generateBookSVG(book) {
 
   <!-- Category Tag Line -->
   <g transform="translate(68, 114)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="${book.glow}" letter-spacing="3.5">${book.tag}</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="900" fill="${book.glow}" letter-spacing="3.5">${xmlEscape(book.tag)}</text>
   </g>
 
   <!-- Center Decorative Emblem with Dynamic Icon -->
@@ -525,32 +535,32 @@ export function generateBookSVG(book) {
 
   <!-- Main Title Block (Pure SVG Typography) -->
   <g transform="translate(68, 385)">
-    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">${book.title}</text>
-    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">${book.titleHighlight}</text>
-    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">${book.subtitle}</text>
+    <text x="0" y="0" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="800" fill="#e2e8f0" letter-spacing="1.5">${xmlEscape(book.title)}</text>
+    <text x="0" y="54" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="950" fill="url(#goldText)" letter-spacing="-0.5">${xmlEscape(book.titleHighlight)}</text>
+    <text x="0" y="98" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="2">${xmlEscape(book.subtitle)}</text>
   </g>
 
   <!-- Golden Accent Divider Line -->
   <line x1="68" y1="510" x2="240" y2="510" stroke="${book.gold}" stroke-width="3.5" stroke-linecap="round" />
 
-  <!-- Pure SVG Descriptor Paragraph (Guaranteed browser & mobile compatibility) -->
+  <!-- Pure SVG Descriptor Paragraph (Guaranteed browser and mobile compatibility) -->
   <g transform="translate(68, 545)">
     ${descriptorLines.map((line, idx) => `
-      <text x="0" y="${idx * 26}" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">${line}</text>
+      <text x="0" y="${idx * 26}" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="500" fill="#cbd5e1" letter-spacing="0.3">${xmlEscape(line)}</text>
     `).join('')}
   </g>
 
   <!-- Feature Value Pills -->
   <g transform="translate(68, 665)">
     <rect x="0" y="0" width="225" height="34" rx="17" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
-    <text x="112" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#f8fafc" letter-spacing="1" text-anchor="middle">✔ ${book.badge}</text>
+    <text x="112" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#f8fafc" letter-spacing="1" text-anchor="middle">✔ ${xmlEscape(book.badge)}</text>
   </g>
   <g transform="translate(305, 665)">
     <rect x="0" y="0" width="235" height="34" rx="17" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
     <text x="117" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="800" fill="#f8fafc" letter-spacing="1" text-anchor="middle">⚡ INSTANT PDF + EPUB</text>
   </g>
 
-  <!-- Barcode & Publisher Footer Block -->
+  <!-- Barcode and Publisher Footer Block -->
   <g transform="translate(68, 770)">
     <line x1="0" y1="-20" x2="480" y2="-20" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
     
@@ -559,7 +569,7 @@ export function generateBookSVG(book) {
     <text x="0" y="20" font-family="system-ui, -apple-system, sans-serif" font-size="13.5" font-weight="900" fill="#ffffff" letter-spacing="0.5">ZEROTOTENK CREATOR LABS</text>
     
     <!-- Edition Tag on Right -->
-    <text x="480" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="900" fill="${book.gold}" letter-spacing="1" text-anchor="end">${book.edition}</text>
+    <text x="480" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="900" fill="${book.gold}" letter-spacing="1" text-anchor="end">${xmlEscape(book.edition)}</text>
     
     <!-- Mini Vector Barcode -->
     <g transform="translate(400, 10)" opacity="0.65">
