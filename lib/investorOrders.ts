@@ -171,20 +171,39 @@ const CATALOG_PRODUCTS = [
   },
 ];
 
+// Deterministic String Hash for Permanent Calendar Date Anchoring
+function hashString(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) + hash + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+
 // Deterministic Pseudo-Random Generator
-function pseudoRandom(seed: number) {
+function pseudoRandom(seed: number): number {
   const x = Math.sin(seed++) * 10000;
   return x - Math.floor(x);
 }
 
 let cachedOrders: InvestorOrder[] | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 60 * 1000; // Auto-refreshes every 60 seconds as time progresses
 
 export function getInvestorOrders(): InvestorOrder[] {
-  if (cachedOrders) return cachedOrders;
+  const now = new Date();
+  const nowMs = now.getTime();
+
+  // Return cached result if within 60s TTL
+  if (cachedOrders && nowMs - lastCacheTime < CACHE_TTL_MS) {
+    return cachedOrders;
+  }
 
   const orders: InvestorOrder[] = [];
   const TOTAL_DAYS = 180; // 6 Months (180 Days)
-  const now = new Date();
+
+  // Start of today in local date
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
@@ -195,53 +214,48 @@ export function getInvestorOrders(): InvestorOrder[] {
     0
   ).getTime();
 
-  // Create weighted product selection array
-  const productPool: typeof CATALOG_PRODUCTS[0][] = [];
+  // Weighted product selection pool
+  const productPool: (typeof CATALOG_PRODUCTS)[0][] = [];
   CATALOG_PRODUCTS.forEach((prod) => {
     for (let i = 0; i < prod.weight; i++) {
       productPool.push(prod);
     }
   });
 
-  let globalOrderIndex = 100000;
-
-  // Generate orders for each day across the past 180 days (from day 0 = today, back to day 179 = 6 months ago)
+  // Generate orders for each day across the past 180 days
   for (let dayOffset = 0; dayOffset < TOTAL_DAYS; dayOffset++) {
-    const daySeed = dayOffset * 29 + 137;
+    const dayDate = new Date(startOfToday - dayOffset * 24 * 60 * 60 * 1000);
+    const dateKey = `${dayDate.getFullYear()}-${String(dayDate.getMonth() + 1).padStart(2, "0")}-${String(dayDate.getDate()).padStart(2, "0")}`;
+    const daySeed = hashString(dateKey);
     const dayRand1 = pseudoRandom(daySeed);
-    const dayRand2 = pseudoRandom(daySeed + 1);
 
-    // Target daily revenue strictly above ₹10,000 (ranges from ₹12,500 on lower days to ₹38,000 on peaks)
-    // Weekend/growth campaign modulation
-    const dayOfWeek = (now.getDay() - (dayOffset % 7) + 7) % 7;
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // Sunday or Saturday
+    const dayOfWeek = dayDate.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
     const weekendMultiplier = isWeekend ? 1.35 : 1.0;
-    
-    // Base target between ₹12,000 and ₹26,000, scaled by weekend / growth momentum
+
+    // Target daily revenue strictly above ₹10,000 (ranges between ₹12,500 and ₹38,000+)
     const targetDailyRevenueRupees = Math.round(
       (12500 + dayRand1 * 13500) * weekendMultiplier
     );
+    const targetPaise = targetDailyRevenueRupees * 100;
 
-    let currentDayVerifiedPaise = 0;
-    let orderInDayIndex = 0;
+    const dayBaseMs = dayDate.getTime();
+    const isToday = dayOffset === 0;
 
-    // Day timestamp range: 07:30 AM to 23:30 PM
-    const dayBaseMs = startOfToday - dayOffset * 24 * 60 * 60 * 1000;
+    // Organic business starting time (~07:15 AM to 08:00 AM)
+    let currentMinute = 435 + Math.floor(pseudoRandom(daySeed + 3) * 45);
+    let dayVerifiedPaise = 0;
+    let orderInDay = 0;
 
-    while (currentDayVerifiedPaise < targetDailyRevenueRupees * 100) {
-      globalOrderIndex++;
-      orderInDayIndex++;
-
-      const seed = globalOrderIndex * 31 + daySeed;
-      const r1 = pseudoRandom(seed);
-      const r2 = pseudoRandom(seed + 1);
-      const r3 = pseudoRandom(seed + 2);
-      const r4 = pseudoRandom(seed + 3);
-      const r5 = pseudoRandom(seed + 4);
-
-      // Order time distributed across the day
-      const minuteOfDay = Math.floor(450 + r1 * 960); // 7:30 AM (450m) to 23:30 PM (1410m)
-      const orderTimestamp = new Date(dayBaseMs + minuteOfDay * 60 * 1000);
+    // Generate daily orders until target revenue is met
+    while (dayVerifiedPaise < targetPaise || (isToday && orderInDay < 25)) {
+      orderInDay++;
+      const orderSeed = daySeed + orderInDay * 37;
+      const r1 = pseudoRandom(orderSeed);
+      const r2 = pseudoRandom(orderSeed + 1);
+      const r3 = pseudoRandom(orderSeed + 2);
+      const r4 = pseudoRandom(orderSeed + 3);
+      const r5 = pseudoRandom(orderSeed + 4);
 
       // Pick product
       const prod = productPool[Math.floor(r2 * productPool.length)];
@@ -252,13 +266,13 @@ export function getInvestorOrders(): InvestorOrder[] {
       const fullName = `${firstName} ${lastName}`;
 
       const prefix = PHONE_PREFIXES[Math.floor(r5 * PHONE_PREFIXES.length)];
-      const suffix = Math.floor(10000 + pseudoRandom(seed + 5) * 90000);
+      const suffix = Math.floor(10000 + pseudoRandom(orderSeed + 5) * 90000);
       const phoneNumber = `${prefix}${suffix}`;
 
-      const loc = INDIAN_LOCATIONS[Math.floor(pseudoRandom(seed + 6) * INDIAN_LOCATIONS.length)];
+      const loc = INDIAN_LOCATIONS[Math.floor(pseudoRandom(orderSeed + 6) * INDIAN_LOCATIONS.length)];
 
-      // Status: 95.2% verified, 4% pending UTR, 0.8% awaiting
-      const statusRand = pseudoRandom(seed + 7);
+      // Status
+      const statusRand = pseudoRandom(orderSeed + 7);
       let status: InvestorOrder["status"] = "VERIFIED";
       if (statusRand > 0.992) {
         status = "AWAITING_PAYMENT";
@@ -266,18 +280,49 @@ export function getInvestorOrders(): InvestorOrder[] {
         status = "PAYMENT_SUBMITTED";
       }
 
-      if (status === "VERIFIED") {
-        currentDayVerifiedPaise += prod.pricePaise;
+      // Calculate irregular, non-fixed timestamps
+      // Gap between 16 and 52 minutes, faster during lunch (12:30-3:00) and evening (19:30-22:30)
+      let gap = 16 + Math.floor(r1 * 36);
+      if (
+        (currentMinute >= 750 && currentMinute <= 900) ||
+        (currentMinute >= 1170 && currentMinute <= 1350)
+      ) {
+        gap = Math.floor(gap * 0.65);
+      }
+      currentMinute += Math.max(9, gap);
+      if (currentMinute > 1425) currentMinute = 1425; // capped at 23:45
+
+      const sec = Math.floor(pseudoRandom(orderSeed + 8) * 60);
+      const orderTimestampMs = dayBaseMs + (currentMinute * 60 + sec) * 1000;
+
+      // Auto-capture filter for today:
+      // Orders that have arrived up to current time are captured.
+      // To guarantee today already crosses > ₹10,000 at all hours, if orderTimestampMs > nowMs but today's captured verified is under ₹10,500, calibrate its timestamp to earlier today so it's captured!
+      let effectiveTimestampMs = orderTimestampMs;
+      if (isToday && dayVerifiedPaise < 10800 * 100 && orderTimestampMs > nowMs) {
+        const elapsedMinutes = Math.max(60, Math.floor((nowMs - dayBaseMs) / 60000) - 10);
+        const morningMinute = 435 + Math.floor(pseudoRandom(orderSeed + 9) * Math.max(10, elapsedMinutes - 435));
+        effectiveTimestampMs = dayBaseMs + (morningMinute * 60 + sec) * 1000;
       }
 
-      // Authentic 12-digit UPI UTR starting with 4 or 5
-      const utrPrefix = statusRand > 0.5 ? "4" : "5";
-      const utrRest = Math.floor(10000000000 + pseudoRandom(seed + 8) * 89999999999).toString();
-      const utr = `${utrPrefix}${utrRest.slice(1)}`;
+      // If today and timestamp is in the future, don't include yet (it will auto-capture when the time arrives!)
+      if (isToday && effectiveTimestampMs > nowMs) {
+        continue;
+      }
 
-      const orderId = `ord_z2k_${globalOrderIndex}`;
-      const invoiceNo = `INV-2026-${globalOrderIndex}`;
-      const serialOrImei = `EBK-${prod.slug.toUpperCase().slice(0, 8)}-${10000 + (globalOrderIndex % 90000)}`;
+      if (status === "VERIFIED") {
+        dayVerifiedPaise += prod.pricePaise;
+      }
+
+      // Deterministic order number based on date and order index
+      const orderNum = (daySeed % 900000) + orderInDay;
+      const orderId = `ord_z2k_${dateKey.replace(/-/g, "").slice(2)}_${orderInDay.toString().padStart(3, "0")}`;
+      const invoiceNo = `INV-${dateKey.slice(0, 4)}-${(orderNum % 90000).toString().padStart(5, "0")}`;
+      const serialOrImei = `EBK-${prod.slug.toUpperCase().slice(0, 8)}-${10000 + (orderNum % 90000)}`;
+
+      const utrPrefix = statusRand > 0.5 ? "4" : "5";
+      const utrRest = Math.floor(10000000000 + pseudoRandom(orderSeed + 10) * 89999999999).toString();
+      const utr = `${utrPrefix}${utrRest.slice(1)}`;
 
       const shippingObj = {
         name: fullName,
@@ -290,7 +335,7 @@ export function getInvestorOrders(): InvestorOrder[] {
 
       orders.push({
         id: orderId,
-        userId: `usr_${1000 + (globalOrderIndex % 6000)}`,
+        userId: `usr_${1000 + (orderNum % 6000)}`,
         unitId: `unit_${orderId}`,
         amountPaise: prod.pricePaise,
         couponCode: r4 > 0.82 ? "10KLAUNCH" : null,
@@ -301,7 +346,7 @@ export function getInvestorOrders(): InvestorOrder[] {
         payerName: fullName,
         shippingJson: JSON.stringify(shippingObj),
         invoiceNo,
-        createdAt: orderTimestamp.toISOString(),
+        createdAt: new Date(effectiveTimestampMs).toISOString(),
         unit: {
           id: `unit_${orderId}`,
           serialOrImei,
@@ -319,9 +364,12 @@ export function getInvestorOrders(): InvestorOrder[] {
     }
   }
 
-  // Sort descending by date (latest orders first)
-  orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // Sort descending by date (latest captured order first)
+  orders.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   cachedOrders = orders;
+  lastCacheTime = nowMs;
   return orders;
 }
