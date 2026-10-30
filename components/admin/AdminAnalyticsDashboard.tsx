@@ -333,8 +333,8 @@ export function AdminAnalyticsDashboard({
     >();
 
     if (dateRangeBounds.type === "hourly") {
-      // 6 time blocks across the 24 hours: 12 AM, 4 AM, 8 AM, 12 PM, 4 PM, 8 PM
-      const hours = [0, 4, 8, 12, 16, 20];
+      // 12 time blocks across the 24 hours: 12 AM, 2 AM, 4 AM, 6 AM, 8 AM, 10 AM, 12 PM, 2 PM, 4 PM, 6 PM, 8 PM, 10 PM
+      const hours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
       hours.forEach((h) => {
         const timeStr = `${h === 0 ? "12" : h > 12 ? h - 12 : h}:00 ${
           h >= 12 ? "PM" : "AM"
@@ -349,8 +349,8 @@ export function AdminAnalyticsDashboard({
       filteredByDate.forEach((o) => {
         const d = new Date(o.createdAt);
         const hour = d.getHours();
-        // Bucket into the closest 4-hour window
-        const bucket = Math.floor(hour / 4) * 4;
+        // Bucket into the 2-hour window across 24h
+        const bucket = Math.floor(hour / 2) * 2;
         const key = bucket.toString();
         if (map.has(key)) {
           const item = map.get(key)!;
@@ -997,8 +997,13 @@ export function AdminAnalyticsDashboard({
 
             {/* Date labels on X Axis */}
             {points.map((pt, idx) => {
-              const step = Math.ceil(points.length / 7);
-              if (idx % step !== 0 && idx !== points.length - 1) return null;
+              if (dateRangeBounds.type === "hourly") {
+                // Show every 4 hours on the axis so labels remain spacious and clean
+                if (idx % 2 !== 0) return null;
+              } else {
+                const step = Math.ceil(points.length / 7);
+                if (idx % step !== 0 && idx !== points.length - 1) return null;
+              }
               return (
                 <text
                   key={idx}
